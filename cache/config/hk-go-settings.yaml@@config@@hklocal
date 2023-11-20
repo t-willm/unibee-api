@@ -14,3 +14,21 @@ database:
     link:    "mysql:root:***REMOVED***@tcp(frps.hknet-inc.com:7111)/xin"
     debug:   true
     type:    mysql
+
+# Redis 配置示例
+redis:
+  # 单实例配置示例1
+  default:
+    address: frps.hknet-inc.com:7112
+    db:      0
+    pass: ***REMOVED***
+    maxIdle: 500
+    minIdle: 10
+    idleTimeout: 1d    
+
+  # # 单实例配置示例2
+  # cache:
+  #   address:     127.0.0.1:6379
+  #   db:          1
+  #   pass:        123456
+  #   idleTimeout: 600
