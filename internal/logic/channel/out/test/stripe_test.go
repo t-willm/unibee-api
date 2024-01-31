@@ -14,7 +14,7 @@ func TestChangeBillingCycleAnchor(t *testing.T) {
 	//go func() {
 	//ctx := context.Background()
 	//channelEntity := util.GetOverseaPayChannel(ctx, 25)
-	//utility.Assert(channelEntity != nil, "支付渠道异常 channel not found")
+	//utility.Assert(channelEntity != nil, "channel not found")
 	stripe.Key = "***REMOVED***"
 	stripe.SetAppInfo(&stripe.AppInfo{
 		Name:    "unibee.server",
