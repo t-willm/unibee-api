@@ -31,6 +31,7 @@ const (
 	TemplateSubscriptionCancelLastCancelledAtPeriodEnd      = "SubscriptionCancelLastCancelledAtPeriodEnd"
 	TemplateSubscriptionImmediateCancel                     = "SubscriptionImmediateCancel"
 	TemplateSubscriptionUpdate                              = "SubscriptionUpdate"
+	TemplateSubscriptionNeedAuthorized                      = "SubscriptionNeedAuthorized"
 )
 
 const SG_KEY = "***REMOVED***"
@@ -114,6 +115,7 @@ type TemplateVariable struct {
 	MerchantName        string `json:"Merchant Name"`
 	DateNow             string `json:"DateNow"`
 	PaymentAmount       string `json:"Payment Amount"`
+	Currency            string `json:"Currency"`
 	TokenExpireMinute   string `json:"TokenExpireMinute"`
 	CodeExpireMinute    string `json:"CodeExpireMinute"`
 	Code                string `json:"Code"`
