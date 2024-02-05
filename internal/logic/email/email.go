@@ -39,6 +39,7 @@ const (
 	TemplateInvoiceRefundCreated                            = "InvoiceRefundCreated"
 )
 
+// const SG_KEY = "***REMOVED***"
 const SG_KEY = "***REMOVED***"
 
 func SendEmailToUser(mailTo string, subject string, body string) error {
