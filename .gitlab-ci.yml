@@ -1,5 +1,5 @@
 stages:
-  - build
+#  - build
   - push
   - deploy
   - hub_push
@@ -13,18 +13,18 @@ variables:
   GOCACHE: ${CI_PROJECT_DIR}/.go/.cache/go-build
   GOLANGCI_LINT_CACHE: ${CI_PROJECT_DIR}/.go/.cache/golangci-lint
 
-build:
-  only:
-    - main
-  stage: build
-  image: golang
-  script:
-    - ls -al /data/
-    - go env -w GOPROXY=https://goproxy.cn,direct
-    - go get
-    - GOOS=linux GOARCH=amd64 go build -o temp/linux_amd64/main main.go
-    - chmod +x temp/linux_amd64/main
-    - cp temp/linux_amd64/main /data/artifacts/unibee_api
+#build:
+#  only:
+#    - main
+#  stage: build
+#  image: golang
+#  script:
+#    - ls -al /data/
+#    - go env -w GOPROXY=https://goproxy.cn,direct
+#    - go get
+#    - GOOS=linux GOARCH=amd64 go build -o temp/linux_amd64/main main.go
+#    - chmod +x temp/linux_amd64/main
+#    - cp temp/linux_amd64/main /data/artifacts/unibee_api
 
 push:
   only:
@@ -32,10 +32,10 @@ push:
   image: docker
   stage: push
   script:
-    - mkdir -p temp/linux_amd64
-    - cp /data/artifacts/unibee_api temp/linux_amd64/main
-    - rm -rf version.txt && echo "buildtime:"$(date +%Y%m%d%H%M)"" > version.txt
-    - chmod +x temp/linux_amd64/main
+#    - mkdir -p temp/linux_amd64
+#    - cp /data/artifacts/unibee_api temp/linux_amd64/main
+#    - rm -rf version.txt && echo "buildtime:"$(date +%Y%m%d%H%M)"" > version.txt
+#    - chmod +x temp/linux_amd64/main
     - docker build -f manifest/docker/Dockerfile -t easzlab.io.local:5000/unibee/unibee-api:daily --platform linux/amd64 .
     - docker push easzlab.io.local:5000/unibee/unibee-api:daily
 
