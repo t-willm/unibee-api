@@ -10,7 +10,7 @@ import (
 )
 
 func TestSendgridTemplate(t *testing.T) {
-	apiKey := "***REMOVED***"
+	apiKey := "changeme"
 	host := "https://api.sendgrid.com"
 	t.Run("Test Templates", func(t *testing.T) {
 		request := sendgrid.GetRequest(apiKey, "/v3/templates", host)
