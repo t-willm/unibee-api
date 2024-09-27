@@ -1016,6 +1016,7 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 		req.Metadata["IsUpgrade"] = true
 		effectImmediate = true
 	} else {
+		req.Metadata["IsUpgrade"] = false
 		effectImmediate = config.GetMerchantSubscriptionConfig(ctx, sub.MerchantId).DowngradeEffectImmediately
 	}
 
