@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"unibee/api/bean"
 	"unibee/internal/logic/merchant_config"
+	"unibee/utility"
 )
 
 const (
@@ -41,6 +42,7 @@ func GetMerchantSubscriptionConfig(ctx context.Context, merchantId uint64) (conf
 	if incompleteExpireTimeConfig != nil && len(incompleteExpireTimeConfig.ConfigValue) > 0 {
 		value, err := strconv.ParseInt(incompleteExpireTimeConfig.ConfigValue, 10, 64)
 		if err == nil {
+			utility.Assert(value >= 0, "IncompleteExpireTime should greater then 0")
 			config.IncompleteExpireTime = value
 		}
 	}
@@ -52,6 +54,7 @@ func GetMerchantSubscriptionConfig(ctx context.Context, merchantId uint64) (conf
 	if tryAutomaticPaymentBeforePeriodEnd != nil && len(tryAutomaticPaymentBeforePeriodEnd.ConfigValue) > 0 {
 		value, err := strconv.ParseInt(tryAutomaticPaymentBeforePeriodEnd.ConfigValue, 10, 64)
 		if err == nil {
+			utility.Assert(value >= 5*60, "TryAutomaticPaymentBeforePeriodEnd should greater then 300")
 			config.TryAutomaticPaymentBeforePeriodEnd = value
 		}
 	}
