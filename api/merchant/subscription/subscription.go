@@ -21,7 +21,7 @@ type ConfigUpdateReq struct {
 	UpgradeProration                   *bool                   `json:"upgradeProration" dc:"UpgradeProration, Prorated Upgrade Invoices(Upgrades will generate prorated invoice by default)"`
 	IncompleteExpireTime               *int64                  `json:"incompleteExpireTime" dc:"IncompleteExpireTime, seconds, Incomplete Status Duration(The period during which subscription remains in “incomplete”)"`
 	InvoiceEmail                       *bool                   `json:"invoiceEmail" dc:"InvoiceEmail, Enable Invoice Email (Toggle to send invoice email to customers)"`
-	TryAutomaticPaymentBeforePeriodEnd *int64                  `json:"tryAutomaticPaymentBeforePeriodEnd" dc:"TryAutomaticPaymentBeforePeriodEnd, Auto-Charge Start Time Before Period End (Default: 2 hours)"`
+	TryAutomaticPaymentBeforePeriodEnd *int64                  `json:"tryAutomaticPaymentBeforePeriodEnd" dc:"TryAutomaticPaymentBeforePeriodEnd, Auto-charge Start Before Period End （Time Difference for Auto-Payment Activation Before Period End）"`
 	GatewayVATRule                     []*bean.MerchantVatRule `json:"gatewayVATRule" dc:""`
 	ShowZeroInvoice                    *bool                   `json:"showZeroInvoice" dc:"ShowZeroInvoice, Display Invoices With Zero Amount (Invoice With Zero Amount will hidden in list by default)"`
 }
