@@ -17,13 +17,13 @@ type ConfigRes struct {
 
 type ConfigUpdateReq struct {
 	g.Meta                             `path:"/config/update" tags:"Subscription" method:"post" summary:"Update Merchant Subscription Config"`
-	DowngradeEffectImmediately         *bool                   `json:"downgradeEffectImmediately" dc:"DowngradeEffectImmediately, whether subscription downgrade should effect immediately or at period end, default at period end"`
-	UpgradeProration                   *bool                   `json:"upgradeProration" dc:"UpgradeProration, whether subscription update generation proration invoice or not, default yes"`
-	IncompleteExpireTime               *int64                  `json:"incompleteExpireTime" dc:"IncompleteExpireTime, seconds, default 1day for plan of month type"`
-	InvoiceEmail                       *bool                   `json:"invoiceEmail" dc:"InvoiceEmail, whether to send invoice email to user, default yes"`
-	TryAutomaticPaymentBeforePeriodEnd *int64                  `json:"tryAutomaticPaymentBeforePeriodEnd" dc:"TryAutomaticPaymentBeforePeriodEnd, default 30 min"`
+	DowngradeEffectImmediately         *bool                   `json:"downgradeEffectImmediately" dc:"DowngradeEffectImmediately, Immediate Downgrade (by default, the downgrades takes effect at the end of the period ）"`
+	UpgradeProration                   *bool                   `json:"upgradeProration" dc:"UpgradeProration, Prorated Upgrade Invoices(Upgrades will generate prorated invoice by default)"`
+	IncompleteExpireTime               *int64                  `json:"incompleteExpireTime" dc:"IncompleteExpireTime, seconds, Incomplete Status Duration(The period during which subscription remains in “incomplete”)"`
+	InvoiceEmail                       *bool                   `json:"invoiceEmail" dc:"InvoiceEmail, Enable Invoice Email (Toggle to send invoice email to customers)"`
+	TryAutomaticPaymentBeforePeriodEnd *int64                  `json:"tryAutomaticPaymentBeforePeriodEnd" dc:"TryAutomaticPaymentBeforePeriodEnd, Auto-Charge Start Time Before Period End (Default: 2 hours)"`
 	GatewayVATRule                     []*bean.MerchantVatRule `json:"gatewayVATRule" dc:""`
-	ShowZeroInvoice                    *bool                   `json:"showZeroInvoice" dc:"ShowZeroInvoice, show zero invoice or not, default no"`
+	ShowZeroInvoice                    *bool                   `json:"showZeroInvoice" dc:"ShowZeroInvoice, Display Invoices With Zero Amount (Invoice With Zero Amount will hidden in list by default)"`
 }
 
 type ConfigUpdateRes struct {
