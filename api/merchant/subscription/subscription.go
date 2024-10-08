@@ -295,6 +295,7 @@ type UpdateRes struct {
 	SubscriptionPendingUpdate *detail.SubscriptionPendingUpdateDetail `json:"subscriptionPendingUpdate" dc:"subscriptionPendingUpdate"`
 	Paid                      bool                                    `json:"paid"`
 	Link                      string                                  `json:"link"`
+	Note                      string                                  `json:"note" dc:"note"`
 }
 
 type UserSubscriptionDetailReq struct {
