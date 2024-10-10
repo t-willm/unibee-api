@@ -101,6 +101,7 @@ func syncInvoice(ctx context.Context, req *invoice.InternalWebhookSyncReq) (tota
 		if list == nil || len(list) == 0 {
 			break
 		}
+		g.Log().Infof(ctx, "InternalWebhookSync FinishedPage:%d with \nInternalWebhookSync req:%s \nInternalWebhookSync total:%d,firstId:%s,lastId:%s", page, utility.MarshalToJsonString(req), total, firstId, lastId)
 	}
 	return total, firstId, lastId
 }
