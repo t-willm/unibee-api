@@ -62,6 +62,9 @@ func ReloadAllMembersCacheForSDKAuthBackground() {
 			member.IsOwner = isOwner
 			member.Permissions = permissions
 			_, _ = g.Redis().Set(ctx, fmt.Sprintf("UniBee#Member#%d", member.Id), utility.MarshalToJsonString(member))
+			if isOwner {
+				_, _ = g.Redis().Set(ctx, fmt.Sprintf("UniBee#Merchant#Owner#%d", member.MerchantId), utility.MarshalToJsonString(member))
+			}
 		}
 	}()
 }
@@ -90,6 +93,9 @@ func ReloadMemberCacheForSdkAuthBackground(id uint64) {
 			member.IsOwner = isOwner
 			member.Permissions = permissions
 			_, _ = g.Redis().Set(ctx, fmt.Sprintf("UniBee#Member#%d", member.Id), utility.MarshalToJsonString(member))
+			if isOwner {
+				_, _ = g.Redis().Set(ctx, fmt.Sprintf("UniBee#Merchant#Owner#%d", member.MerchantId), utility.MarshalToJsonString(member))
+			}
 		}
 	}()
 }
