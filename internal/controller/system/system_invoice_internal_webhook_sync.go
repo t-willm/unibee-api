@@ -43,7 +43,7 @@ func (c *ControllerInvoice) InternalWebhookSync(ctx context.Context, req *invoic
 			}
 			if req.EndId != nil {
 				query = query.WhereLTE(dao.Invoice.Columns().Id, req.EndId)
-			} else if req.StartTime != nil {
+			} else if req.EndTime != nil {
 				query = query.WhereLTE(dao.Invoice.Columns().CreateTime, req.EndTime)
 			}
 			query = query.WhereIn(dao.Invoice.Columns().IsDeleted, []int{0}).
