@@ -10,7 +10,7 @@ import (
 )
 
 func (c *ControllerMember) NewMember(ctx context.Context, req *member.NewMemberReq) (res *member.NewMemberRes, err error) {
-	utility.Assert(!middleware.IsPremiumVersion(ctx, _interface.GetMerchantId(ctx)), "Feature member need premium license, please contact out support team")
+	utility.Assert(!middleware.IsPremiumVersion(ctx, _interface.GetMerchantId(ctx)), "Feature member need premium license, contact us directly if needed")
 	err = member2.AddMerchantMember(ctx, _interface.GetMerchantId(ctx), req.Email, req.FirstName, req.LastName, req.RoleIds)
 	if err != nil {
 		return nil, err
