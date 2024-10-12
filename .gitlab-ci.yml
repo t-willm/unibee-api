@@ -2,6 +2,7 @@ stages:
   - daily_build
   - daily_deploy
   - daily_push
+  - tag
 
 variables:
   IMAGE_GROUP: xxx
