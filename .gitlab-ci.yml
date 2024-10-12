@@ -1,9 +1,7 @@
 stages:
-#  - build
-  - push
-  - deploy
-  - hub_push
-#  - nm_stage_deploy
+  - daily_build
+  - daily_deploy
+  - daily_push
 
 variables:
   IMAGE_GROUP: xxx
@@ -13,47 +11,42 @@ variables:
   GOCACHE: ${CI_PROJECT_DIR}/.go/.cache/go-build
   GOLANGCI_LINT_CACHE: ${CI_PROJECT_DIR}/.go/.cache/golangci-lint
 
-#build:
-#  only:
-#    - main
-#  stage: build
-#  image: golang
-#  script:
-#    - ls -al /data/
-#    - go env -w GOPROXY=https://goproxy.cn,direct
-#    - go get
-#    - GOOS=linux GOARCH=amd64 go build -o temp/linux_amd64/main main.go
-#    - chmod +x temp/linux_amd64/main
-#    - cp temp/linux_amd64/main /data/artifacts/unibee_api
-
-push:
+daily_build:
   only:
     - main
   image: docker
-  stage: push
+  stage: daily_build
   script:
-#    - mkdir -p temp/linux_amd64
-#    - cp /data/artifacts/unibee_api temp/linux_amd64/main
     - rm -rf version.txt && echo "daily,buildtime:"$(date +%Y%m%d%H%M)"" > version.txt
-#    - chmod +x temp/linux_amd64/main
     - docker build -f manifest/docker/Dockerfile -t easzlab.io.local:5000/unibee/unibee-api:daily --platform linux/amd64 .
     - docker push easzlab.io.local:5000/unibee/unibee-api:daily
 
-deploy:
+daily_deploy:
   only:
     - main
   image: registry.cn-shenzhen.aliyuncs.com/heiku/kubectl:latest
-  stage: deploy
+  stage: daily_deploy
   script:
     - kubectl --kubeconfig /data/kubeconfigs/unib_dev_configs rollout restart deployment/unibee-api-daily
 
 
-hub_push:
+daily_push:
   only:
     - main
   image: docker
-  stage: hub_push
+  stage: daily_push
   script:
     - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
     - docker tag easzlab.io.local:5000/unibee/unibee-api:daily unibee/api:stage
     - docker push unibee/api:stage
+
+tag:
+  only:
+    - tags
+  image: docker
+  stage: tag
+  script:
+    - rm -rf version.txt && echo "$CI_COMMIT_TAG-premium,buildtime:"$(date +%Y%m%d%H%M)"" > version.txt
+    - docker build -f manifest/docker/Dockerfile -t unibee/api:$CI_COMMIT_TAG-premium --platform linux/amd64 .
+    - docker login -u ${CI_REGISTRY_USER} -p ${CI_REGISTRY_PASSWORD}
+    - docker push unibee/api:${CI_COMMIT_TAG}-premium
