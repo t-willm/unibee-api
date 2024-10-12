@@ -29,7 +29,7 @@ ENV WORKDIR                 /app
 ADD resource                $WORKDIR/
 COPY --from=builder /app/temp/linux_amd64/main $WORKDIR/main
 ADD ./version.txt $WORKDIR/version.txt
-ADD ./template.html $WORKDIR/template.html
+ADD ./resource/email/template.html $WORKDIR/resource/email/template.html
 ADD ./manifest/i18n  $WORKDIR/i18n
 RUN chmod +x $WORKDIR/main
 ###############################################################################
