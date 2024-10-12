@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/net/ghttp"
 	go_redismq "github.com/jackyang-hk/go-redismq"
@@ -8,6 +9,54 @@ import (
 	_interface "unibee/internal/interface"
 	"unibee/utility"
 )
+
+func GetMerchantLicense(ctx context.Context, merchantId uint64) (one *License) {
+	if merchantId <= 0 {
+		return nil
+	}
+	license := go_redismq.Invoke(ctx, &go_redismq.InvoiceRequest{
+		Group:   "GID_UniBee_License",
+		Method:  "GetLicenseByMerchantId",
+		Request: merchantId,
+	}, 0)
+	if license == nil || !license.Status {
+		return nil
+	}
+	err := utility.UnmarshalFromJsonString(utility.MarshalToJsonString(license.Response), &one)
+	if err != nil {
+		return nil
+	}
+	return one
+}
+
+func IsPremiumVersion(ctx context.Context, merchantId uint64) bool {
+	if config.GetConfigInstance().IsLocal() {
+		return true
+	}
+	if merchantId <= 0 {
+		return false
+	}
+	license := go_redismq.Invoke(ctx, &go_redismq.InvoiceRequest{
+		Group:   "GID_UniBee_License",
+		Method:  "GetLicenseByMerchantId",
+		Request: merchantId,
+	}, 0)
+	if license == nil || !license.Status {
+		return false
+	}
+	var one *License
+	err := utility.UnmarshalFromJsonString(utility.MarshalToJsonString(license.Response), &one)
+	if err != nil {
+		return false
+	}
+	if one == nil {
+		return false
+	}
+	if one.Version == nil || !one.Version.IsPaid || one.Version.Expired {
+		return false
+	}
+	return true
+}
 
 func PremiumLicenseHandler(r *ghttp.Request) {
 	if config.GetConfigInstance().IsLocal() {
