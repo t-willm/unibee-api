@@ -122,6 +122,10 @@ func TaskForCompensateSubUpDownInvoices(ctx context.Context) {
 		for _, one := range list {
 			time.Sleep(1 * time.Second)
 			invoiceDetail := detail.InvoiceDetail(ctx, one.InvoiceId)
+			if invoiceDetail == nil {
+				g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoice not found, ignore")
+				continue
+			}
 			if invoiceDetail.Metadata != nil {
 				if _, ok := invoiceDetail.Metadata["IsUpgrade"]; ok {
 					if _, ok2 := invoiceDetail.Metadata["SubscriptionUpdate"]; ok2 {
