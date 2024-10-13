@@ -217,7 +217,7 @@ func TaskForCompensateSubUpDownInvoices(ctx context.Context) {
 			_, err = dao.Invoice.Ctx(ctx).Data(g.Map{
 				dao.Invoice.Columns().MetaData:  utility.MarshalToJsonString(metaData),
 				dao.Invoice.Columns().GmtModify: gtime.Now(),
-			}).Where(dao.Invoice.Columns().Id, one.Id).OmitNil().Update()
+			}).Where(dao.Invoice.Columns().InvoiceId, invoiceDetail.InvoiceId).OmitNil().Update()
 			if err != nil {
 				g.Log().Errorf(ctx, "TaskForCompensateSubUpDownInvoices Update Invoice Metadata error:%s", err.Error())
 			}
