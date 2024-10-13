@@ -214,13 +214,13 @@ func TaskForCompensateSubUpDownInvoices(ctx context.Context) {
 			metaData["SubscriptionUpdate"] = true
 			metaData["FromCompensate"] = true
 			g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s NewMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(metaData))
-			//_, err = dao.Invoice.Ctx(ctx).Data(g.Map{
-			//	dao.Invoice.Columns().MetaData:  utility.MarshalToJsonString(metaData),
-			//	dao.Invoice.Columns().GmtModify: gtime.Now(),
-			//}).Where(dao.Invoice.Columns().Id, one.Id).OmitNil().Update()
-			//if err != nil {
-			//	g.Log().Errorf(ctx, "TaskForCompensateSubUpDownInvoices Update Invoice Metadata error:%s", err.Error())
-			//}
+			_, err = dao.Invoice.Ctx(ctx).Data(g.Map{
+				dao.Invoice.Columns().MetaData:  utility.MarshalToJsonString(metaData),
+				dao.Invoice.Columns().GmtModify: gtime.Now(),
+			}).Where(dao.Invoice.Columns().Id, one.Id).OmitNil().Update()
+			if err != nil {
+				g.Log().Errorf(ctx, "TaskForCompensateSubUpDownInvoices Update Invoice Metadata error:%s", err.Error())
+			}
 		}
 		// next page
 		page = page + 1
