@@ -220,7 +220,7 @@ func TaskForCompensateSubUpDownInvoices(ctx context.Context) {
 			if err != nil {
 				g.Log().Errorf(ctx, "TaskForCompensateSubUpDownInvoices Update Invoice newMetadata error:%s", err.Error())
 			} else {
-				g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s newMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(metaData))
+				g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s Update newMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(metaData))
 			}
 		}
 		// next page
