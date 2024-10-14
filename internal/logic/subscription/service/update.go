@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"unibee/api/bean/detail"
 	config2 "unibee/internal/cmd/config"
 	"unibee/internal/cmd/i18n"
+	redismq2 "unibee/internal/cmd/redismq"
 	"unibee/internal/consts"
 	dao "unibee/internal/dao/default"
 	_interface "unibee/internal/interface"
@@ -692,6 +694,13 @@ func SubscriptionUpdate(ctx context.Context, req *UpdateInternalReq, merchantMem
 	}).Where(dao.SubscriptionPendingUpdate.Columns().PendingUpdateId, one.PendingUpdateId).OmitNil().Update()
 	if err != nil {
 		return nil, err
+	} else {
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicSubscriptionPendingUpdateCreate.Topic,
+			Tag:        redismq2.TopicSubscriptionPendingUpdateCreate.Tag,
+			Body:       one.PendingUpdateId,
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 
 	if prepare.EffectImmediate && subUpdateRes.Paid {
@@ -722,6 +731,7 @@ func SubscriptionUpdate(ctx context.Context, req *UpdateInternalReq, merchantMem
 			ProrationAmount: one.ProrationAmount,
 			GatewayId:       one.GatewayId,
 			UserId:          one.UserId,
+			InvoiceId:       one.InvoiceId,
 			GmtModify:       one.GmtModify,
 			Paid:            one.Paid,
 			Link:            one.Link,
