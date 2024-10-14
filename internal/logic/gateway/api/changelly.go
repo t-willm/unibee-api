@@ -373,15 +373,6 @@ func signForFiat(method string, urlPath string, dateTime string, purePrivateKey 
 		return
 	}
 	purePrivateKey = string(decodedBytes)
-
-	//	privateKey := purePrivateKey
-	//	if !strings.Contains(privateKey, "BEGIN PRIVATE KEY") {
-	//		privateKey = `
-	//***REMOVED***
-	//` + purePrivateKey + `
-	//***REMOVED***
-	//`
-	//	}
 	block, _ := pem.Decode([]byte(purePrivateKey))
 	utility.Assert(block != nil, "rsa encrypt error")
 	prv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
