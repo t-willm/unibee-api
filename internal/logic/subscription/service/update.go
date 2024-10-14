@@ -689,7 +689,7 @@ func SubscriptionUpdate(ctx context.Context, req *UpdateInternalReq, merchantMem
 		dao.SubscriptionPendingUpdate.Columns().Link:            subUpdateRes.Link,
 		dao.SubscriptionPendingUpdate.Columns().InvoiceId:       subUpdateRes.GatewayUpdateId,
 		dao.SubscriptionPendingUpdate.Columns().Note:            note,
-		dao.SubscriptionPendingUpdate.Columns().MetaData:        utility.MarshalToJsonString(req.Metadata),
+		dao.SubscriptionPendingUpdate.Columns().MetaData:        utility.MarshalToJsonString(prepare.Invoice.Metadata),
 		dao.SubscriptionPendingUpdate.Columns().EffectImmediate: effectImmediate,
 	}).Where(dao.SubscriptionPendingUpdate.Columns().PendingUpdateId, one.PendingUpdateId).OmitNil().Update()
 	if err != nil {
