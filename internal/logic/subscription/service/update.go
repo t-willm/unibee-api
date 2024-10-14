@@ -743,7 +743,7 @@ func SubscriptionUpdate(ctx context.Context, req *UpdateInternalReq, merchantMem
 			Addons:          addon2.GetSubscriptionAddonsByAddonJson(ctx, one.AddonData),
 			UpdatePlan:      bean.SimplifyPlan(query.GetPlanById(ctx, one.UpdatePlanId)),
 			UpdateAddons:    addon2.GetSubscriptionAddonsByAddonJson(ctx, one.UpdateAddonData),
-			Metadata:        req.Metadata,
+			Metadata:        prepare.Invoice.Metadata,
 		},
 		Paid: len(subUpdateRes.Link) == 0 || subUpdateRes.Paid, // link is blank or paid is true, portal will not redirect
 		Link: subUpdateRes.Link,
