@@ -583,7 +583,7 @@ func SubscriptionUpdate(ctx context.Context, req *UpdateInternalReq, merchantMem
 		TaxPercentage:    prepare.TaxPercentage,
 		DiscountCode:     prepare.RecurringDiscountCode,
 		CreateTime:       gtime.Now().Timestamp(),
-		MetaData:         utility.MarshalToJsonString(req.Metadata),
+		MetaData:         utility.MarshalToJsonString(prepare.Invoice.Metadata),
 	}
 
 	result, err := dao.SubscriptionPendingUpdate.Ctx(ctx).Data(one).OmitNil().Insert(one)

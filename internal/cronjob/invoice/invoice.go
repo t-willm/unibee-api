@@ -134,9 +134,9 @@ func TaskForCompensateSubUpDownInvoices(ctx context.Context) {
 					}
 				}
 			}
-			metaData := invoiceDetail.Metadata
-			if metaData == nil {
-				metaData = make(map[string]interface{})
+			invoiceMetaData := invoiceDetail.Metadata
+			if invoiceMetaData == nil {
+				invoiceMetaData = make(map[string]interface{})
 			}
 			var isUpgrade bool
 			var changed bool
@@ -209,18 +209,29 @@ func TaskForCompensateSubUpDownInvoices(ctx context.Context) {
 				g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices nochange ignore invoiceId:%s ", invoiceDetail.InvoiceId)
 				continue
 			}
-			g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s oldMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(metaData))
-			metaData["IsUpgrade"] = isUpgrade
-			metaData["SubscriptionUpdate"] = true
-			metaData["FromCompensate"] = true
+			g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s oldMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(invoiceMetaData))
+			invoiceMetaData["IsUpgrade"] = isUpgrade
+			invoiceMetaData["SubscriptionUpdate"] = true
+			invoiceMetaData["FromCompensate"] = true
 			_, err = dao.Invoice.Ctx(ctx).Data(g.Map{
-				dao.Invoice.Columns().MetaData:  utility.MarshalToJsonString(metaData),
-				dao.Invoice.Columns().GmtModify: gtime.Now(),
+				dao.Invoice.Columns().MetaData: utility.MarshalToJsonString(invoiceMetaData),
 			}).Where(dao.Invoice.Columns().InvoiceId, invoiceDetail.InvoiceId).OmitNil().Update()
 			if err != nil {
 				g.Log().Errorf(ctx, "TaskForCompensateSubUpDownInvoices Update Invoice newMetadata error:%s", err.Error())
 			} else {
-				g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s Update newMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(metaData))
+				g.Log().Infof(ctx, "TaskForCompensateSubUpDownInvoices invoiceId:%s Update newMetadata:%s", invoiceDetail.InvoiceId, utility.MarshalToJsonString(invoiceMetaData))
+			}
+			var metaData = make(map[string]interface{})
+			if len(one.MetaData) > 0 {
+				_ = utility.UnmarshalFromJsonString(one.MetaData, &metaData)
+			}
+			if _, ok := metaData["SubscriptionUpdate"]; !ok {
+				metaData["IsUpgrade"] = isUpgrade
+				metaData["SubscriptionUpdate"] = true
+				metaData["FromCompensate"] = true
+				_, _ = dao.SubscriptionPendingUpdate.Ctx(ctx).Data(g.Map{
+					dao.SubscriptionPendingUpdate.Columns().MetaData: utility.MarshalToJsonString(metaData),
+				}).Where(dao.SubscriptionPendingUpdate.Columns().PendingUpdateId, one.PendingUpdateId).OmitNil().Update()
 			}
 		}
 		// next page

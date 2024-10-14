@@ -18,7 +18,7 @@ func ResentWebhook(ctx context.Context, logId uint64) bool {
 	var one *entity.MerchantWebhookLog
 	err := dao.MerchantWebhookLog.Ctx(ctx).Where(dao.MerchantWebhookLog.Columns().Id, logId).Scan(&one)
 	if err != nil {
-		g.Log().Errorf(ctx, "ResentWebhook error:", err.Error())
+		g.Log().Errorf(ctx, "ResentWebhook error:%s", err.Error())
 		return false
 	}
 	utility.Assert(one != nil, "webhook log not found")
