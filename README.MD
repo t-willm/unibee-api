@@ -3,6 +3,7 @@
 # Introduction
 
 The UniBee API is an essential service for the UniBee Billing system, designed to empower our customers to effectively manage their subscription plans. It provides seamless access to multiple payment channels, subscription management, invoicing services, and more, simplifying and streamlining the billing process.
+
 # Infra
 ### Gateway
 - Stripe
