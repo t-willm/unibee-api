@@ -1,0 +1,15 @@
+#  --database-link=postgres:root:***REMOVED***@tcp(192.168.17.123:5432)/root --redis-address=192.168.17.188:6379 --redis-pass=***REMOVED*** --database-debug=true
+env: daily
+
+server:
+  domainPath: "http://api.unibee.top"
+
+database:
+  default:
+    link:    "postgres:unibee:changeme@tcp(127.0.0.1:5432)/root"
+
+# Redis Stage
+redis:
+  default:
+    address: 127.0.0.1:6379
+    pass: changeme

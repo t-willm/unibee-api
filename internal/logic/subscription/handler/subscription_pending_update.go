@@ -35,6 +35,13 @@ func HandlePendingUpdatePaymentFailure(ctx context.Context, pendingUpdateId stri
 	}).Where(dao.SubscriptionPendingUpdate.Columns().Id, one.Id).Where(dao.SubscriptionPendingUpdate.Columns().Status, consts.PendingSubStatusCreate).OmitNil().Update()
 	if err != nil {
 		return false, err
+	} else {
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicSubscriptionPendingUpdateCancel.Topic,
+			Tag:        redismq2.TopicSubscriptionPendingUpdateCancel.Tag,
+			Body:       pendingUpdateId,
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 	return true, nil
 }
@@ -51,6 +58,13 @@ func HandlePendingUpdatePaymentSuccess(ctx context.Context, sub *entity.Subscrip
 	}).Where(dao.SubscriptionPendingUpdate.Columns().Id, one.Id).OmitNil().Update()
 	if err != nil {
 		return false, err
+	} else {
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicSubscriptionPendingUpdateSuccess.Topic,
+			Tag:        redismq2.TopicSubscriptionPendingUpdateSuccess.Tag,
+			Body:       pendingUpdateId,
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 	var billingCycleAnchor = invoice.BillingCycleAnchor
 	if billingCycleAnchor <= 0 {

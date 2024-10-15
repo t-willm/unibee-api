@@ -18,6 +18,40 @@ type SubscriptionDetail struct {
 	UnfinishedSubscriptionPendingUpdate *SubscriptionPendingUpdateDetail `json:"unfinishedSubscriptionPendingUpdate" dc:"processing pending update"`
 }
 
+type SubscriptionPendingUpdateEvent struct {
+	MerchantId      uint64                  `json:"merchantId"           description:"MerchantId"`
+	User            *bean.UserAccount       `json:"user" dc:"user"`
+	Subscription    *bean.Subscription      `json:"subscription" dc:"Subscription"`
+	Invoice         *bean.Invoice           `json:"invoice"            description:"invoice"`
+	PendingUpdateId string                  `json:"pendingUpdateId"      description:"PendingUpdateId"`
+	GmtCreate       *gtime.Time             `json:"gmtCreate"            description:"GmtCreate"`
+	Amount          int64                   `json:"amount"               description:"CaptureAmount, Cent"`
+	Status          int                     `json:"status"               description:"Status，1-Pending｜2-Finished｜3-Cancelled"`
+	UpdateAmount    int64                   `json:"updateAmount"         description:"UpdateAmount, Cents"`
+	ProrationAmount int64                   `json:"prorationAmount"      description:"ProrationAmount,Cents"`
+	Currency        string                  `json:"currency"             description:"Currency"`
+	UpdateCurrency  string                  `json:"updateCurrency"       description:"UpdateCurrency"`
+	PlanId          uint64                  `json:"planId"               description:"PlanId"`
+	UpdatePlanId    uint64                  `json:"updatePlanId"         description:"UpdatePlanId"`
+	Quantity        int64                   `json:"quantity"             description:"quantity"`
+	UpdateQuantity  int64                   `json:"updateQuantity"       description:"UpdateQuantity"`
+	AddonData       string                  `json:"addonData"            description:"plan addon json data"`
+	UpdateAddonData string                  `json:"updateAddonData"      description:"UpdateAddonData"`
+	GatewayId       uint64                  `json:"gatewayId"            description:"Id"`
+	GmtModify       *gtime.Time             `json:"gmtModify"            description:"GmtModify"`
+	Paid            int                     `json:"paid"                 description:"Paid"`
+	Link            string                  `json:"link"                 description:"Link"`
+	MerchantMember  *MerchantMemberDetail   `json:"merchantMember"       description:"Merchant Member"`
+	EffectImmediate int                     `json:"effectImmediate"      description:"EffectImmediate"`
+	EffectTime      int64                   `json:"effectTime"           description:"effect_immediate=0, EffectTime unit_time"`
+	Note            string                  `json:"note"                 description:"Update Note"`
+	Plan            *bean.Plan              `json:"plan" dc:"Plan"`
+	Addons          []*bean.PlanAddonDetail `json:"addons" dc:"Addons"`
+	UpdatePlan      *bean.Plan              `json:"updatePlan" dc:"UpdatePlan"`
+	UpdateAddons    []*bean.PlanAddonDetail `json:"updateAddons" dc:"UpdateAddons"`
+	Metadata        map[string]interface{}  `json:"metadata" description:""`
+}
+
 type SubscriptionTimeLineDetail struct {
 	MerchantId      uint64                  `json:"merchantId"      description:"merchant id"`             // merchant id
 	UserId          uint64                  `json:"userId"          description:"userId"`                  // userId
@@ -41,8 +75,10 @@ type SubscriptionTimeLineDetail struct {
 
 type SubscriptionPendingUpdateDetail struct {
 	MerchantId      uint64                  `json:"merchantId"           description:"MerchantId"`
+	UserId          uint64                  `json:"userId"               description:"UserId"`
 	SubscriptionId  string                  `json:"subscriptionId"       description:"SubscriptionId"`
-	PendingUpdateId string                  `json:"pendingUpdateId" description:"PendingUpdateId"`
+	PendingUpdateId string                  `json:"pendingUpdateId"      description:"PendingUpdateId"`
+	InvoiceId       string                  `json:"invoiceId"            description:"invoice id"`
 	GmtCreate       *gtime.Time             `json:"gmtCreate"            description:"GmtCreate"`
 	Amount          int64                   `json:"amount"               description:"CaptureAmount, Cent"`
 	Status          int                     `json:"status"               description:"Status，1-Pending｜2-Finished｜3-Cancelled"`
@@ -55,16 +91,15 @@ type SubscriptionPendingUpdateDetail struct {
 	Quantity        int64                   `json:"quantity"             description:"quantity"`
 	UpdateQuantity  int64                   `json:"updateQuantity"       description:"UpdateQuantity"`
 	AddonData       string                  `json:"addonData"            description:"plan addon json data"`
-	UpdateAddonData string                  `json:"updateAddonData"     description:"UpdateAddonData"`
+	UpdateAddonData string                  `json:"updateAddonData"      description:"UpdateAddonData"`
 	GatewayId       uint64                  `json:"gatewayId"            description:"Id"`
-	UserId          uint64                  `json:"userId"               description:"UserId"`
 	GmtModify       *gtime.Time             `json:"gmtModify"            description:"GmtModify"`
 	Paid            int                     `json:"paid"                 description:"Paid"`
 	Link            string                  `json:"link"                 description:"Link"`
 	MerchantMember  *MerchantMemberDetail   `json:"merchantMember"       description:"Merchant Member"`
 	EffectImmediate int                     `json:"effectImmediate"      description:"EffectImmediate"`
 	EffectTime      int64                   `json:"effectTime"           description:"effect_immediate=0, EffectTime unit_time"`
-	Note            string                  `json:"note"            description:"Update Note"`
+	Note            string                  `json:"note"                 description:"Update Note"`
 	Plan            *bean.Plan              `json:"plan" dc:"Plan"`
 	Addons          []*bean.PlanAddonDetail `json:"addons" dc:"Addons"`
 	UpdatePlan      *bean.Plan              `json:"updatePlan" dc:"UpdatePlan"`

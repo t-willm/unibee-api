@@ -6,11 +6,14 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
+	redismq2 "unibee/internal/cmd/redismq"
 	"unibee/internal/consts"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/payment/service"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
+	"unibee/utility"
 )
 
 func SubscriptionPendingUpdateCancel(ctx context.Context, pendingUpdateId string, reason string) error {
@@ -42,6 +45,14 @@ func SubscriptionPendingUpdateCancel(ctx context.Context, pendingUpdateId string
 			WhereIn(dao.SubscriptionPendingUpdate.Columns().Status, []int64{consts.PendingSubStatusInit, consts.PendingSubStatusCreate}).OmitNil().Update()
 		if err != nil {
 			return err
+		} else {
+			//send mq message
+			_, _ = redismq.Send(&redismq.Message{
+				Topic:      redismq2.TopicSubscriptionPendingUpdateCancel.Topic,
+				Tag:        redismq2.TopicSubscriptionPendingUpdateCancel.Tag,
+				Body:       pendingUpdateId,
+				CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+			})
 		}
 	}
 	return nil
