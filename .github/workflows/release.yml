@@ -1,0 +1,67 @@
+name: Release latest version
+
+on:
+  repository_dispatch:
+    types: [release]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build prod image and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: manifest/docker/Dockerfile
+          push: true
+          tags: "unibee/api:${{ github.event.client_payload.version }}"
+
+      - name: Tag version
+        uses: anothrNick/github-tag-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WITH_V: false
+          CUSTOM_TAG: ${{ github.event.client_payload.version }}
+
+      - name: Build changelog
+        id: change_log
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          mode: HYBRID
+          token: ${{ secrets.GITHUB_TOKEN }}
+          configurationJson: |
+            {
+               "categories": [
+                 {
+                     "title": "## What's Changed:",
+                     "labels": []
+                 }
+               ],
+              "pr_template": "- #{{TITLE}}"
+            }
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.event.client_payload.version }}
+          name: Release ${{ github.event.client_payload.version }}
+          body: ${{ steps.change_log.outputs.changelog }}
+
+  update-package-version:
+    needs: release
+    uses: ./.github/workflows/update-version.yml
+    with:
+      version: ${{ github.event.client_payload.version }}
