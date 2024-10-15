@@ -400,9 +400,9 @@ func sign(method string, urlPath string, dateTime string, purePrivateKey string,
 	privateKey := purePrivateKey
 	if !strings.Contains(privateKey, "BEGIN PRIVATE KEY") {
 		privateKey = `
-***REMOVED***
+-----BEGIN PRIVATE KEY-----
 ` + purePrivateKey + `
-***REMOVED***
+-----END PRIVATE KEY-----
 `
 	}
 	block, _ := pem.Decode([]byte(privateKey))

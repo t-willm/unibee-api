@@ -92,7 +92,7 @@ gf gen dao
 
 
 Stage Nacos Web Manage
-http://***REMOVED***:30099/nacos
+http://43.207.114.88:30099/nacos
 
 Next Integration
 https://openapi-generator.tech/docs/generators/
