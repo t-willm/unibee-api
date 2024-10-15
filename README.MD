@@ -1,4 +1,4 @@
-# UniBee Recurring Billing Api
+# UniBee Recurring Billing API
 
 # Introduction
 
@@ -32,11 +32,11 @@ Manual setting `config.yaml` in project dir before run unibee-api, the template 
 go run main.go
 ```
 
-#### OpenApi V3 Doc：http://127.0.0.1:8088/swagger
+#### OpenAPI V3 Doc：http://127.0.0.1:8088/swagger
 
-#### Swagger TryOut Api：http://127.0.0.1:8088/swagger-ui.html
+#### Swagger TryOut API：http://127.0.0.1:8088/swagger-ui.html
 
-#### OpenApi V3 Json：http://127.0.0.1:8088/api.json
+#### OpenAPI V3 Json：http://127.0.0.1:8088/api.json
 
 ## How To build Docker Image
 ```bash
@@ -44,7 +44,7 @@ docker build -f manifest/docker/Dockfile .
 ```
 
 ## Develop Tools
-#### Generate Api Controller Shell：
+#### Generate API Controller Shell：
 ```bash
 gf gen ctrl
 ```
@@ -56,8 +56,8 @@ gf gen dao
 ### GoFrame Quick Start:
 - Github : https://github.com/gogf/gf
 - Doc : https://goframe.org/pages/viewpage.action?pageId=1114399
-- Api Generate Shell: gf gen ctrl (should have gf install)
-  - Generate Controller After Api Definition
+- API Generate Shell: gf gen ctrl (should have gf install)
+  - Generate Controller After API Definition
   - Doc https://goframe.org/pages/viewpage.action?pageId=93880327
 - Dao Generate Shell: gf gen dao (should have gf install)
   - Generate Dao|Entity|DO After Database Table Change 
@@ -87,7 +87,7 @@ The basic directory structure of the GoFrame business project is as follows (usi
 └── main.go\
 🔥 Important note 🔥 : The engineering catalog of the framework adopts a universal design to meet the needs of different complex business projects, but the actual project can be appropriate to increase or decrease the default catalog according to the needs of the project. For example, if no i18n/template/protobuf requirement is required, delete the corresponding directory. For example, for very simple business projects (such as verification/demonstration projects), do not consider the use of rigorous dao/logic/model directory and features, then directly delete the corresponding directory, you can directly implement the business logic in the controller. Everything can be flexibly assembled by the developer!
 
-Api External interface Defines the input/output data structure of the service provided externally. Considering the need for version management, api/xxx/v1... Exists.
+API External interface Defines the input/output data structure of the service provided externally. Considering the need for version management, api/xxx/v1... Exists.
 hack tool scripts Store project development tools and scripts. For example, the configuration of CLI tools, various shell/bat scripts and other files.
 internal Internal logic Directory for storing service logic. Hide visibility from the outside through the Golang internal feature.
 - cmd CLI manages the directory. Multiple command lines can be managed and maintained.
