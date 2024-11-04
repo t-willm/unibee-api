@@ -157,6 +157,7 @@ func HandleSubscriptionNextBillingCyclePaymentSuccess(ctx context.Context, sub *
 		dao.Subscription.Columns().CurrentPeriodStartTime: gtime.NewFromTimeStamp(invoice.PeriodStart),
 		dao.Subscription.Columns().CurrentPeriodEndTime:   gtime.NewFromTimeStamp(periodEnd),
 		dao.Subscription.Columns().DunningTime:            dunningTime,
+		dao.Subscription.Columns().DiscountCode:           invoice.DiscountCode,
 		dao.Subscription.Columns().TrialEnd:               invoice.PeriodStart - 1,
 		dao.Subscription.Columns().GmtModify:              gtime.Now(),
 		dao.Subscription.Columns().TaxPercentage:          invoice.TaxPercentage,
