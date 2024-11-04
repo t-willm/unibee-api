@@ -4,10 +4,23 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/os/gtime"
 	dao "unibee/internal/dao/default"
+	"unibee/internal/logic/merchant_config"
 	entity "unibee/internal/model/entity/default"
+	"unibee/utility"
 )
 
-func GetDefaultProduct() *entity.Product {
+const MerchantDefaultProductKey = "KEYMERCHANTDEFAULTPRODUCT"
+
+func GetDefaultProduct(ctx context.Context, merchantId uint64) *entity.Product {
+	config := merchant_config.GetMerchantConfig(ctx, merchantId, MerchantDefaultProductKey)
+	if config != nil && len(config.ConfigValue) > 0 {
+		var one *entity.Product
+		_ = utility.UnmarshalFromJsonString(config.ConfigValue, &one)
+		if one != nil {
+			one.Id = 0
+			return one
+		}
+	}
 	return &entity.Product{
 		Id:          0,
 		GmtCreate:   gtime.Now(),
@@ -25,9 +38,9 @@ func GetDefaultProduct() *entity.Product {
 	}
 }
 
-func GetProductById(ctx context.Context, id uint64) (one *entity.Product) {
+func GetProductById(ctx context.Context, id uint64, merchantId uint64) (one *entity.Product) {
 	if id <= 0 {
-		return GetDefaultProduct()
+		return GetDefaultProduct(ctx, merchantId)
 	}
 	err := dao.Product.Ctx(ctx).Where(dao.Product.Columns().Id, id).OmitEmpty().Scan(&one)
 	if err != nil {

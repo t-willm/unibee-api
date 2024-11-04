@@ -160,7 +160,8 @@ func (s *SMiddleware) MerchantHandler(r *ghttp.Request) {
 		r.Exit()
 	}
 	if !customCtx.IsOpenApiCall {
-		// Merchant Portal Call
+		// Admin Portal Call
+		customCtx.IsAdminPortalCall = true
 		if !jwt.IsAuthTokenAvailable(r.Context(), customCtx.TokenString) {
 			g.Log().Infof(r.Context(), "MerchantHandler Invalid Token:%s", customCtx.TokenString)
 			_interface.JsonRedirectExit(r, 61, "invalid token", s.LoginUrl)

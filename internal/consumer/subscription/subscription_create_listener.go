@@ -9,7 +9,6 @@ import (
 	"unibee/internal/consts"
 	"unibee/internal/consumer/webhook/event"
 	subscription3 "unibee/internal/consumer/webhook/subscription"
-	user2 "unibee/internal/consumer/webhook/user"
 	"unibee/internal/logic/subscription/user_sub_plan"
 	"unibee/internal/logic/user/sub_update"
 	"unibee/internal/query"
@@ -44,7 +43,7 @@ func (t SubscriptionCreateListener) Consume(ctx context.Context, message *redism
 		{
 			sub.Status = consts.SubStatusPending
 			subscription3.SendMerchantSubscriptionWebhookBackground(sub, -10000, event.UNIBEE_WEBHOOK_EVENT_SUBSCRIPTION_CREATED, message.CustomData)
-			user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED)
+			//user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED, fmt.Sprintf("SubscriptionCreated#%s", sub.SubscriptionId))
 			sub_update.UpdateUserVatNumber(ctx, sub.UserId, sub.VatNumber)
 		}
 		// 3min PaymentChecker

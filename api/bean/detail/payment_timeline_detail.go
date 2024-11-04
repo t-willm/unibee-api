@@ -44,6 +44,12 @@ func ConvertPaymentTimeline(ctx context.Context, one *entity.PaymentTimeline) *P
 		transactionId = one.RefundId
 		externalTransactionId = refund.GatewayRefundId
 	}
+	if len(payment.AuthorizeReason) == 0 && len(payment.FailureReason) == 0 {
+		if payment.Status == consts.PaymentCancelled {
+			//payment.FailureReason = "Cancelled"
+			payment.AuthorizeReason = "Cancelled"
+		}
+	}
 	return &PaymentTimelineDetail{
 		Id:                    one.Id,
 		TransactionId:         transactionId,

@@ -26,7 +26,7 @@ func (t TaskUserExport) Header() interface{} {
 
 func (t TaskUserExport) PageData(ctx context.Context, page int, count int, task *entity.MerchantBatchTask) ([]interface{}, error) {
 	var mainList = make([]interface{}, 0)
-	if task == nil && task.MerchantId <= 0 {
+	if task == nil || task.MerchantId <= 0 {
 		return mainList, nil
 	}
 	merchant := query.GetMerchantById(ctx, task.MerchantId)
@@ -73,9 +73,9 @@ func (t TaskUserExport) PageData(ctx context.Context, page int, count int, task 
 		if value, ok := payload["subStatus"].([]interface{}); ok {
 			req.SubStatus = export.JsonArrayTypeConvert(ctx, value)
 		}
-		//if value, ok := payload["deleteInclude"].(bool); ok {
-		//	req.DeleteInclude = value
-		//}
+		if value, ok := payload["planIds"].([]interface{}); ok {
+			req.PlanIds = export.JsonArrayTypeConvert(ctx, value)
+		}
 		if value, ok := payload["sortField"].(string); ok {
 			req.SortField = value
 		}

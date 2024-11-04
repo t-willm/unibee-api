@@ -17,6 +17,7 @@ import (
 	"unibee/internal/logic/email"
 	"unibee/internal/logic/invoice/invoice_compute"
 	service3 "unibee/internal/logic/invoice/service"
+	metric2 "unibee/internal/logic/metric"
 	"unibee/internal/logic/operation_log"
 	"unibee/internal/logic/payment/service"
 	subscription2 "unibee/internal/logic/subscription"
@@ -208,6 +209,16 @@ func SubscriptionCancelAtPeriodEnd(ctx context.Context, subscriptionId string, p
 			g.Log().Errorf(ctx, "SendTemplateEmail SubscriptionCancelAtPeriodEnd:%s", err.Error())
 		}
 	}
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         sub.UserId,
+			SubscriptionId: sub.SubscriptionId,
+			Description:    "SubscriptionCancelAtPeriodEnd",
+		}),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
 		MerchantId:     sub.MerchantId,
 		Target:         fmt.Sprintf("Subscription(%v)", sub.SubscriptionId),
@@ -255,6 +266,16 @@ func SubscriptionCancelLastCancelAtPeriodEnd(ctx context.Context, subscriptionId
 	if err != nil {
 		g.Log().Errorf(ctx, "SendTemplateEmail SubscriptionCancelLastCancelAtPeriodEnd:%s", err.Error())
 	}
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         sub.UserId,
+			SubscriptionId: sub.SubscriptionId,
+			Description:    "SubscriptionCancelLastCancelAtPeriodEnd",
+		}),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
 		MerchantId:     sub.MerchantId,
 		Target:         fmt.Sprintf("Subscription(%v)", sub.SubscriptionId),
@@ -302,20 +323,30 @@ func SubscriptionAddNewTrialEnd(ctx context.Context, subscriptionId string, Appe
 	if err != nil {
 		return err
 	}
-	if sub.Status == consts.SubStatusActive {
+	if sub.Status != consts.SubStatusActive && newStatus == consts.SubStatusActive {
 		_, _ = redismq.Send(&redismq.Message{
 			Topic:      redismq2.TopicSubscriptionActive.Topic,
 			Tag:        redismq2.TopicSubscriptionActive.Tag,
 			Body:       sub.SubscriptionId,
 			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 		})
-		_, _ = redismq.Send(&redismq.Message{
-			Topic:      redismq2.TopicSubscriptionUpdate.Topic,
-			Tag:        redismq2.TopicSubscriptionUpdate.Tag,
-			Body:       sub.SubscriptionId,
-			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
-		})
 	}
+	_, _ = redismq.Send(&redismq.Message{
+		Topic:      redismq2.TopicSubscriptionUpdate.Topic,
+		Tag:        redismq2.TopicSubscriptionUpdate.Tag,
+		Body:       sub.SubscriptionId,
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         sub.UserId,
+			SubscriptionId: sub.SubscriptionId,
+			Description:    "SubscriptionAddNewTrialEnd",
+		}),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
 		MerchantId:     sub.MerchantId,
 		Target:         fmt.Sprintf("Subscription(%v)", sub.SubscriptionId),
@@ -373,6 +404,16 @@ func SubscriptionActiveTemporarily(ctx context.Context, subscriptionId string, e
 			}
 		}
 	}
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         sub.UserId,
+			SubscriptionId: sub.SubscriptionId,
+			Description:    "SubscriptionActivateTemporarily",
+		}),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
 		MerchantId:     sub.MerchantId,
 		Target:         fmt.Sprintf("Subscription(%v)", sub.SubscriptionId),
@@ -468,6 +509,16 @@ func EndTrialManual(ctx context.Context, subscriptionId string) (err error) {
 			dao.Subscription.Columns().LastUpdateTime: gtime.Now().Timestamp(),
 		}).Where(dao.Subscription.Columns().SubscriptionId, subscriptionId).OmitNil().Update()
 	}
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         sub.UserId,
+			SubscriptionId: sub.SubscriptionId,
+			Description:    "SubscriptionEndTrialManual",
+		}),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
 		MerchantId:     sub.MerchantId,
 		Target:         fmt.Sprintf("Subscription(%s)", sub.SubscriptionId),

@@ -33,6 +33,7 @@ var exportTaskMap = map[string]_interface.BatchExportTask{
 	"SubscriptionExport": &subscription.TaskSubscriptionExport{},
 	"TransactionExport":  &transaction.TaskTransactionExport{},
 	"DiscountExport":     &discount.TaskDiscountExport{},
+	"UserDiscountExport": &discount.TaskUserDiscountExport{},
 }
 
 func GetExportTaskImpl(task string) _interface.BatchExportTask {

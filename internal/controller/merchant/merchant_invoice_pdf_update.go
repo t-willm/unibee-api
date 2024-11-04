@@ -54,6 +54,9 @@ func (c *ControllerInvoice) PdfUpdate(ctx context.Context, req *invoice.PdfUpdat
 	if req.ShowDetailItem != nil {
 		metadata["ShowDetailItem"] = *req.ShowDetailItem
 	}
+	for k, v := range req.Metadata {
+		metadata[k] = v
+	}
 	_, err = dao.Invoice.Ctx(ctx).Data(g.Map{
 		dao.Invoice.Columns().MetaData:  utility.MarshalToJsonString(metadata),
 		dao.Invoice.Columns().GmtModify: gtime.Now(),

@@ -1,12 +1,12 @@
 // =================================================================================
-// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT. 
+// Code generated and maintained by GoFrame CLI tool. DO NOT EDIT.
 // =================================================================================
 
 package merchant
 
 import (
 	"context"
-	
+
 	"unibee/api/merchant/auth"
 	"unibee/api/merchant/balance"
 	"unibee/api/merchant/discount"
@@ -56,11 +56,14 @@ type IMerchantDiscount interface {
 	Deactivate(ctx context.Context, req *discount.DeactivateReq) (res *discount.DeactivateRes, err error)
 	UserDiscountList(ctx context.Context, req *discount.UserDiscountListReq) (res *discount.UserDiscountListRes, err error)
 	PlanApplyPreview(ctx context.Context, req *discount.PlanApplyPreviewReq) (res *discount.PlanApplyPreviewRes, err error)
+	QuantityIncrement(ctx context.Context, req *discount.QuantityIncrementReq) (res *discount.QuantityIncrementRes, err error)
+	QuantityDecrement(ctx context.Context, req *discount.QuantityDecrementReq) (res *discount.QuantityDecrementRes, err error)
 }
 
 type IMerchantEmail interface {
 	GatewaySetup(ctx context.Context, req *email.GatewaySetupReq) (res *email.GatewaySetupRes, err error)
 	SendTemplateEmailToUser(ctx context.Context, req *email.SendTemplateEmailToUserReq) (res *email.SendTemplateEmailToUserRes, err error)
+	SenderSetup(ctx context.Context, req *email.SenderSetupReq) (res *email.SenderSetupRes, err error)
 	TemplateList(ctx context.Context, req *email.TemplateListReq) (res *email.TemplateListRes, err error)
 	TemplateUpdate(ctx context.Context, req *email.TemplateUpdateReq) (res *email.TemplateUpdateRes, err error)
 	TemplateSetDefault(ctx context.Context, req *email.TemplateSetDefaultReq) (res *email.TemplateSetDefaultRes, err error)
@@ -77,6 +80,7 @@ type IMerchantGateway interface {
 	SetupWebhook(ctx context.Context, req *gateway.SetupWebhookReq) (res *gateway.SetupWebhookRes, err error)
 	WireTransferSetup(ctx context.Context, req *gateway.WireTransferSetupReq) (res *gateway.WireTransferSetupRes, err error)
 	WireTransferEdit(ctx context.Context, req *gateway.WireTransferEditReq) (res *gateway.WireTransferEditRes, err error)
+	SetupExchangeApi(ctx context.Context, req *gateway.SetupExchangeApiReq) (res *gateway.SetupExchangeApiRes, err error)
 }
 
 type IMerchantInvoice interface {
@@ -266,5 +270,3 @@ type IMerchantWebhook interface {
 	UpdateEndpoint(ctx context.Context, req *webhook.UpdateEndpointReq) (res *webhook.UpdateEndpointRes, err error)
 	DeleteEndpoint(ctx context.Context, req *webhook.DeleteEndpointReq) (res *webhook.DeleteEndpointRes, err error)
 }
-
-

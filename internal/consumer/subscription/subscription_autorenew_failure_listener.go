@@ -31,6 +31,7 @@ func (t SubscriptionAutoRenewFailureListener) Consume(ctx context.Context, messa
 	if sub != nil {
 		sub = query.GetSubscriptionBySubscriptionId(ctx, sub.SubscriptionId)
 		subscription3.SendMerchantSubscriptionWebhookBackground(sub, -10000, event.UNIBEE_WEBHOOK_EVENT_SUBSCRIPTION_AUTORENEW_FAILURE, message.CustomData)
+		//user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED, fmt.Sprintf("SubscriptionAutoRenewFailure#%s", sub.SubscriptionId))
 	}
 	return redismq.CommitMessage
 }

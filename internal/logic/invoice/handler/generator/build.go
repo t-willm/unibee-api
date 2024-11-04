@@ -207,7 +207,7 @@ func (doc *Document) appendMetas() {
 
 	doc.pdf.SetXY(130, startY)
 	doc.pdf.SetFont(doc.Options.BoldFont, "B", 10)
-	doc.pdf.CellFormat(80, 12, doc.encodeFitRefundString("Invoice Status:"), "0", 0, "L", false, 0, "")
+	doc.pdf.CellFormat(80, 12, doc.encodeFitRefundString("Invoice status:"), "0", 0, "L", false, 0, "")
 
 	doc.pdf.SetXY(130, startY+10)
 	doc.pdf.SetFont(doc.Options.BoldFont, "B", 18)

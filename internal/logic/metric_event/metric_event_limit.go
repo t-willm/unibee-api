@@ -39,6 +39,7 @@ func GetUserSubscriptionMetricStat(ctx context.Context, merchantId uint64, user 
 		}
 		return &metric2.UserMetric{
 			IsPaid:                  one.Status == consts.SubStatusActive || one.Status == consts.SubStatusIncomplete,
+			Product:                 bean.SimplifyProduct(query.GetProductById(ctx, uint64(query.GetPlanById(ctx, one.PlanId).ProductId), merchantId)),
 			User:                    bean.SimplifyUserAccount(user),
 			Subscription:            bean.SimplifySubscription(ctx, one),
 			Plan:                    bean.SimplifyPlan(query.GetPlanById(ctx, one.PlanId)),
@@ -49,6 +50,7 @@ func GetUserSubscriptionMetricStat(ctx context.Context, merchantId uint64, user 
 		return &metric2.UserMetric{
 			IsPaid:                  false,
 			User:                    bean.SimplifyUserAccount(user),
+			Product:                 nil,
 			Subscription:            nil,
 			Plan:                    nil,
 			Addons:                  nil,

@@ -67,3 +67,10 @@ type WireTransferEditReq struct {
 }
 type WireTransferEditRes struct {
 }
+
+type SetupExchangeApiReq struct {
+	g.Meta             `path:"/setup_exchange_rate_api" tags:"Gateway" method:"post" summary:"ExchangeRateApiSetup"`
+	ExchangeRateApiKey string `json:"exchangeRateApiKey"  dc:"The key of exchange rate api"`
+}
+type SetupExchangeApiRes struct {
+}

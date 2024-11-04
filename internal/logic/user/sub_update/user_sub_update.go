@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
+	redismq2 "unibee/internal/cmd/redismq"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/operation_log"
 	"unibee/internal/query"
+	"unibee/utility"
 )
 
 func UpdateUserDefaultSubscriptionForUpdate(ctx context.Context, userId uint64, subscriptionId string) {
@@ -31,6 +34,13 @@ func UpdateUserDefaultSubscriptionForUpdate(ctx context.Context, userId uint64, 
 			}).Where(dao.UserAccount.Columns().Id, userId).OmitNil().Update()
 			if err != nil {
 				g.Log().Errorf(ctx, "UpdateUserDefaultSubscriptionForUpdate err:%s", err.Error())
+			} else {
+				_, _ = redismq.Send(&redismq.Message{
+					Topic:      redismq2.TopicUserAccountUpdate.Topic,
+					Tag:        redismq2.TopicUserAccountUpdate.Tag,
+					Body:       fmt.Sprintf("%d", user.Id),
+					CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+				})
 			}
 		}
 	}
@@ -56,6 +66,13 @@ func UpdateUserDefaultSubscriptionForPaymentSuccess(ctx context.Context, userId 
 			}).Where(dao.UserAccount.Columns().Id, userId).OmitNil().Update()
 			if err != nil {
 				g.Log().Errorf(ctx, "UpdateUserDefaultSubscriptionForPaymentSuccess err:%s", err.Error())
+			} else {
+				_, _ = redismq.Send(&redismq.Message{
+					Topic:      redismq2.TopicUserAccountUpdate.Topic,
+					Tag:        redismq2.TopicUserAccountUpdate.Tag,
+					Body:       fmt.Sprintf("%d", user.Id),
+					CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+				})
 			}
 		}
 	}
@@ -85,5 +102,11 @@ func UpdateUserDefaultVatNumber(ctx context.Context, userId uint64, vatNumber st
 			PlanId:         0,
 			DiscountCode:   "",
 		}, nil)
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicUserAccountUpdate.Topic,
+			Tag:        redismq2.TopicUserAccountUpdate.Tag,
+			Body:       fmt.Sprintf("%d", user.Id),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 }

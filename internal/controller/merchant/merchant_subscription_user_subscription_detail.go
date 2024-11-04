@@ -26,18 +26,49 @@ func (c *ControllerSubscription) UserSubscriptionDetail(ctx context.Context, req
 		user = query.GetUserAccountById(ctx, req.UserId)
 	}
 	utility.Assert(user != nil, "user not found")
-	one := query.GetLatestActiveOrIncompleteOrCreateSubscriptionByUserId(ctx, user.Id, _interface.GetMerchantId(ctx), req.ProductId)
-	if one != nil {
-		detail, err := service.SubscriptionDetail(ctx, one.SubscriptionId)
-		if err == nil {
-			return &subscription.UserSubscriptionDetailRes{
-				User:                                detail.User,
-				Subscription:                        detail.Subscription,
-				Plan:                                detail.Plan,
-				Gateway:                             detail.Gateway,
-				Addons:                              detail.Addons,
-				UnfinishedSubscriptionPendingUpdate: detail.UnfinishedSubscriptionPendingUpdate,
-			}, nil
+	if !_interface.Context().Get(ctx).IsOpenApiCall {
+		//Admin Portal
+		one := query.GetLatestActiveOrIncompleteOrCreateSubscriptionByUserId(ctx, user.Id, _interface.GetMerchantId(ctx), req.ProductId)
+		if one != nil {
+			detail, err := service.SubscriptionDetail(ctx, one.SubscriptionId)
+			if err == nil {
+				return &subscription.UserSubscriptionDetailRes{
+					User:                                detail.User,
+					Subscription:                        detail.Subscription,
+					Plan:                                detail.Plan,
+					Gateway:                             detail.Gateway,
+					Addons:                              detail.Addons,
+					UnfinishedSubscriptionPendingUpdate: detail.UnfinishedSubscriptionPendingUpdate,
+				}, nil
+			}
+		}
+	} else {
+		//if len(user.SubscriptionId) > 0 {
+		//	detail, err := service.SubscriptionDetail(ctx, user.SubscriptionId)
+		//	if err == nil && detail != nil && detail.Subscription.ProductId == req.ProductId {
+		//		return &subscription.UserSubscriptionDetailRes{
+		//			User:                                detail.User,
+		//			Subscription:                        detail.Subscription,
+		//			Plan:                                detail.Plan,
+		//			Gateway:                             detail.Gateway,
+		//			Addons:                              detail.Addons,
+		//			UnfinishedSubscriptionPendingUpdate: detail.UnfinishedSubscriptionPendingUpdate,
+		//		}, nil
+		//	}
+		//}
+		one := query.GetLatestSubscriptionByUserId(ctx, user.Id, _interface.GetMerchantId(ctx), req.ProductId)
+		if one != nil {
+			detail, err := service.SubscriptionDetail(ctx, one.SubscriptionId)
+			if err == nil {
+				return &subscription.UserSubscriptionDetailRes{
+					User:                                detail.User,
+					Subscription:                        detail.Subscription,
+					Plan:                                detail.Plan,
+					Gateway:                             detail.Gateway,
+					Addons:                              detail.Addons,
+					UnfinishedSubscriptionPendingUpdate: detail.UnfinishedSubscriptionPendingUpdate,
+				}, nil
+			}
 		}
 	}
 

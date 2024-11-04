@@ -6,11 +6,15 @@ import (
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"os"
+	"unibee/internal/logic/email/sender"
 	"unibee/utility"
 )
 
-func SendEmailToUser(emailGatewayKey string, mailTo string, subject string, body string) (result string, err error) {
-	from := mail.NewEmail("no-reply", "no-reply@unibee.dev")
+func SendEmailToUser(f *sender.Sender, emailGatewayKey string, mailTo string, subject string, body string) (result string, err error) {
+	if f == nil {
+		f = sender.GetDefaultSender()
+	}
+	from := mail.NewEmail(f.Name, f.Address)
 	to := mail.NewEmail(mailTo, mailTo)
 	plainTextContent := body
 	htmlContent := "<div>" + body + " </div>"
@@ -28,8 +32,11 @@ func SendEmailToUser(emailGatewayKey string, mailTo string, subject string, body
 	return utility.MarshalToJsonString(response), nil
 }
 
-func SendPdfAttachEmailToUser(emailGatewayKey string, mailTo string, subject string, body string, pdfFilePath string, pdfFileName string) (result string, err error) {
-	from := mail.NewEmail("no-reply", "no-reply@unibee.dev")
+func SendPdfAttachEmailToUser(f *sender.Sender, emailGatewayKey string, mailTo string, subject string, body string, pdfFilePath string, pdfFileName string) (result string, err error) {
+	if f == nil {
+		f = sender.GetDefaultSender()
+	}
+	from := mail.NewEmail(f.Name, f.Address)
 	to := mail.NewEmail(mailTo, mailTo)
 	plainTextContent := body
 	htmlContent := "<div>" + body + " </div>"

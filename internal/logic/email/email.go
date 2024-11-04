@@ -7,10 +7,12 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
 	"strings"
+	"time"
 	"unibee/api/bean"
 	log2 "unibee/internal/consumer/webhook/log"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/email/gateway"
+	"unibee/internal/logic/email/sender"
 	"unibee/internal/logic/merchant_config"
 	"unibee/internal/logic/merchant_config/update"
 	"unibee/internal/logic/operation_log"
@@ -49,8 +51,9 @@ const (
 )
 
 const (
-	KeyMerchantEmailName = "KEY_MERCHANT_DEFAULT_EMAIL_NAME"
-	IMPLEMENT_NAMES      = "sendgrid"
+	KeyMerchantEmailName   = "KEY_MERCHANT_DEFAULT_EMAIL_NAME"
+	IMPLEMENT_NAMES        = "sendgrid"
+	KeyMerchantEmailSender = "KEY_MERCHANT_EMAIL_SENDER"
 )
 
 func GetDefaultMerchantEmailConfig(ctx context.Context, merchantId uint64) (name string, data string) {
@@ -63,6 +66,40 @@ func GetDefaultMerchantEmailConfig(ctx context.Context, merchantId uint64) (name
 		data = valueConfig.ConfigValue
 	}
 	return
+}
+
+func GetMerchantEmailSender(ctx context.Context, merchantId uint64) *sender.Sender {
+	config := merchant_config.GetMerchantConfig(ctx, merchantId, KeyMerchantEmailSender)
+	var one *sender.Sender
+	if config == nil {
+		return nil
+	} else {
+		err := utility.UnmarshalFromJsonString(config.ConfigValue, &one)
+		if err == nil && one != nil {
+			return one
+		} else {
+			return nil
+		}
+	}
+}
+
+func SetupMerchantEmailSender(ctx context.Context, merchantId uint64, sender *sender.Sender) error {
+	if merchantId > 0 && sender != nil && len(sender.Address) > 0 && len(sender.Name) > 0 {
+		err := update.SetMerchantConfig(ctx, merchantId, KeyMerchantEmailSender, utility.MarshalToJsonString(sender))
+		operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
+			MerchantId:     merchantId,
+			Target:         fmt.Sprintf("Name(%s)-Address(%v)", sender.Name, sender.Address),
+			Content:        "SetupEmailSenderConfig",
+			UserId:         0,
+			SubscriptionId: "",
+			InvoiceId:      "",
+			PlanId:         0,
+			DiscountCode:   "",
+		}, err)
+		return nil
+	} else {
+		return gerror.New("invalid data")
+	}
 }
 
 func SetupMerchantEmailConfig(ctx context.Context, merchantId uint64, name string, data string, isDefault bool) error {
@@ -166,7 +203,6 @@ func SendTemplateEmailByOpenApi(ctx context.Context, merchantId uint64, mailTo s
 	if len(pdfFilePath) > 0 && len(attachName) == 0 {
 		attachName = "invoice"
 	}
-
 	var response string
 	if len(pdfFilePath) > 0 {
 		md5 := utility.MD5(fmt.Sprintf("%s%s%s%s", mailTo, title, content, attachName))
@@ -174,9 +210,9 @@ func SendTemplateEmailByOpenApi(ctx context.Context, merchantId uint64, mailTo s
 			utility.Assert(false, "duplicate email too fast")
 		}
 		if len(template.GatewayTemplateId) > 0 {
-			response, err = gateway.SendDynamicPdfAttachEmailToUser(emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language, pdfFilePath, attachName+".pdf")
+			response, err = gateway.SendDynamicPdfAttachEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language, pdfFilePath, attachName+".pdf")
 		} else {
-			response, err = gateway.SendPdfAttachEmailToUser(emailGatewayKey, mailTo, title, content, pdfFilePath, attachName+".pdf")
+			response, err = gateway.SendPdfAttachEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, content, pdfFilePath, attachName+".pdf")
 		}
 		if err != nil {
 			SaveHistory(ctx, merchantId, mailTo, title, content, attachName+".pdf", err.Error())
@@ -190,9 +226,9 @@ func SendTemplateEmailByOpenApi(ctx context.Context, merchantId uint64, mailTo s
 			utility.Assert(false, "duplicate email too fast")
 		}
 		if len(template.GatewayTemplateId) > 0 {
-			response, err = gateway.SendDynamicTemplateEmailToUser(emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language)
+			response, err = gateway.SendDynamicTemplateEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language)
 		} else {
-			response, err = gateway.SendEmailToUser(emailGatewayKey, mailTo, title, content)
+			response, err = gateway.SendEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, content)
 		}
 		if err != nil {
 			SaveHistory(ctx, merchantId, mailTo, title, content, "", err.Error())
@@ -286,7 +322,7 @@ func sendTemplateEmailInternal(ctx context.Context, merchantId uint64, mailTo st
 		}
 	}
 	if len(pdfFilePath) > 0 && len(attachName) == 0 {
-		attachName = "invoice"
+		attachName = fmt.Sprintf("invoice_%s", time.Now().Format("20060102"))
 	}
 
 	var response string
@@ -296,9 +332,9 @@ func sendTemplateEmailInternal(ctx context.Context, merchantId uint64, mailTo st
 			utility.Assert(false, "duplicate email too fast")
 		}
 		if len(template.GatewayTemplateId) > 0 {
-			response, err = gateway.SendDynamicPdfAttachEmailToUser(emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language, pdfFilePath, attachName+".pdf")
+			response, err = gateway.SendDynamicPdfAttachEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language, pdfFilePath, attachName+".pdf")
 		} else {
-			response, err = gateway.SendPdfAttachEmailToUser(emailGatewayKey, mailTo, title, content, pdfFilePath, attachName+".pdf")
+			response, err = gateway.SendPdfAttachEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, content, pdfFilePath, attachName+".pdf")
 		}
 		if err != nil {
 			if len(template.GatewayTemplateId) > 0 {
@@ -320,9 +356,9 @@ func sendTemplateEmailInternal(ctx context.Context, merchantId uint64, mailTo st
 			utility.Assert(false, "duplicate email too fast")
 		}
 		if len(template.GatewayTemplateId) > 0 {
-			response, err = gateway.SendDynamicTemplateEmailToUser(emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language)
+			response, err = gateway.SendDynamicTemplateEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, template.GatewayTemplateId, variableMap, language)
 		} else {
-			response, err = gateway.SendEmailToUser(emailGatewayKey, mailTo, title, content)
+			response, err = gateway.SendEmailToUser(GetMerchantEmailSender(ctx, merchantId), emailGatewayKey, mailTo, title, content)
 		}
 		if err != nil {
 			if len(template.GatewayTemplateId) > 0 {

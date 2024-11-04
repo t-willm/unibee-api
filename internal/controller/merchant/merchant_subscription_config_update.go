@@ -56,5 +56,6 @@ func (c *ControllerSubscription) ConfigUpdate(ctx context.Context, req *subscrip
 			return nil, err
 		}
 	}
+
 	return &subscription.ConfigUpdateRes{Config: config.GetMerchantSubscriptionConfig(ctx, _interface.GetMerchantId(ctx))}, nil
 }

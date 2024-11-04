@@ -6,6 +6,7 @@ import (
 	"github.com/gogf/gf/v2/encoding/gjson"
 	"strconv"
 	"unibee/api/bean"
+	_interface "unibee/internal/interface"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
 )
@@ -70,10 +71,14 @@ func ConvertUserAccountToDetail(ctx context.Context, one *entity.UserAccount) *U
 	}
 	gatewayId, _ := strconv.ParseUint(one.GatewayId, 10, 64)
 	var metadata = make(map[string]interface{})
-	if len(one.MetaData) > 0 {
-		err := gjson.Unmarshal([]byte(one.MetaData), &metadata)
-		if err != nil {
-			fmt.Printf("SimplifyPlan Unmarshal Metadata error:%s", err.Error())
+	if _interface.Context() != nil &&
+		_interface.Context().Get(ctx) != nil &&
+		!_interface.Context().Get(ctx).IsAdminPortalCall {
+		if len(one.MetaData) > 0 {
+			err := gjson.Unmarshal([]byte(one.MetaData), &metadata)
+			if err != nil {
+				fmt.Printf("ConvertUserAccountToDetail Unmarshal Metadata error:%s", err.Error())
+			}
 		}
 	}
 	return &UserAccountDetail{

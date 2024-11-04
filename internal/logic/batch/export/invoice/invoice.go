@@ -30,7 +30,7 @@ func (t TaskInvoiceExport) Header() interface{} {
 
 func (t TaskInvoiceExport) PageData(ctx context.Context, page int, count int, task *entity.MerchantBatchTask) ([]interface{}, error) {
 	var mainList = make([]interface{}, 0)
-	if task == nil && task.MerchantId <= 0 {
+	if task == nil || task.MerchantId <= 0 {
 		return mainList, nil
 	}
 	merchant := query.GetMerchantById(ctx, task.MerchantId)
@@ -183,7 +183,7 @@ func (t TaskInvoiceExport) PageData(ctx context.Context, page int, count int, ta
 				IsEU:                           IsEu,
 				InvoiceType:                    invoiceType,
 				Gateway:                        invoiceGateway,
-				MerchantName:                   merchant.Name,
+				MerchantName:                   merchant.CompanyName,
 				DiscountCode:                   one.DiscountCode,
 				OriginAmount:                   utility.ConvertCentToDollarStr(one.OriginAmount, one.Currency),
 				TotalAmount:                    utility.ConvertCentToDollarStr(one.TotalAmount, one.Currency),
@@ -228,7 +228,7 @@ type ExportInvoiceEntity struct {
 	Email                          string      `json:"Email"               comment:"The email of user"`
 	InvoiceName                    string      `json:"InvoiceName" comment:"The name of invoice"`
 	ProductName                    string      `json:"ProductName" comment:"The product name of invoice"`
-	InvoiceType                    string      `json:"InvoiceType" comment:"The type of invoice, Tax Invoice or Credit Note"`
+	InvoiceType                    string      `json:"InvoiceType" comment:"The type of invoice, Tax Invoice or Credit note"`
 	Address                        string      `json:"Address" comment:"The address of user"`
 	City                           string      `json:"City" comment:"The city of user"`
 	State                          string      `json:"State" comment:"The state of user"`

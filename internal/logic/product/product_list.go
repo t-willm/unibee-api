@@ -2,12 +2,11 @@ package product
 
 import (
 	"context"
-	"unibee/internal/query"
-
 	"strings"
 	"unibee/api/bean"
 	dao "unibee/internal/dao/default"
 	entity "unibee/internal/model/entity/default"
+	"unibee/internal/query"
 	"unibee/utility"
 )
 
@@ -52,7 +51,7 @@ func ProductList(ctx context.Context, req *ListInternalReq) (list []*bean.Produc
 		return nil, 0
 	}
 	if len(req.Status) == 0 || utility.IsIntInArray(req.Status, 1) {
-		list = append(list, bean.SimplifyProduct(query.GetDefaultProduct()))
+		list = append(list, bean.SimplifyProduct(query.GetDefaultProduct(ctx, req.MerchantId)))
 		total = total + 1
 	}
 	for _, one := range mainList {

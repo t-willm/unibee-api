@@ -11,6 +11,7 @@ import (
 	"unibee/internal/cmd/i18n"
 	"unibee/internal/consts"
 	dao "unibee/internal/dao/default"
+	quantity2 "unibee/internal/logic/discount/quantity"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
 	"unibee/utility"
@@ -40,6 +41,12 @@ func UserDiscountApplyPreview(ctx context.Context, req *UserDiscountApplyReq) (c
 	if discountCode == nil {
 		return false, false, i18n.LocalizationFormat(ctx, "{#DiscountCodeInvalid}")
 	}
+	if discountCode.Quantity > 0 {
+		if discountCode.Quantity <= int64(quantity2.GetDiscountQuantityUsedCount(ctx, discountCode.Id)) {
+			return false, false, i18n.LocalizationFormat(ctx, "{#DiscountCodeReachLimitation}")
+		}
+	}
+	quantity2.GetDiscountQuantityUsedCount(ctx, discountCode.Id)
 	if discountCode.Status != consts.DiscountStatusActive {
 		return false, false, "Code not active"
 	}
@@ -134,6 +141,13 @@ func UserDiscountApply(ctx context.Context, req *UserDiscountApplyReq) (discount
 	if len(req.DiscountCode) == 0 {
 		return nil, gerror.New("invalid discountCode")
 	}
+
+	code := query.GetDiscountByCode(ctx, req.MerchantId, req.DiscountCode)
+	if code.Quantity > 0 {
+		utility.Assert(code.Quantity > int64(quantity2.GetDiscountQuantityUsedCount(ctx, code.Id)), i18n.LocalizationFormat(ctx, "{#DiscountCodeReachLimitation}"))
+	}
+	quantity2.GetDiscountQuantityUsedCount(ctx, code.Id)
+	//should make sure cache loaded
 	one := &entity.MerchantUserDiscountCode{
 		MerchantId:     req.MerchantId,
 		UserId:         req.UserId,
@@ -154,11 +168,11 @@ func UserDiscountApply(ctx context.Context, req *UserDiscountApplyReq) (discount
 	}
 	id, _ := result.LastInsertId()
 	one.Id = id
-
+	_, _ = g.Redis().IncrBy(ctx, quantity2.GetDiscountQuantityUsedCountCacheKey(one.Code), 1)
 	return one, nil
 }
 
-func UserDiscountRollback(ctx context.Context, id int64) error {
+func userDiscountRollback(ctx context.Context, id int64) error {
 	one := query.GetUserDiscountById(ctx, id)
 	if one == nil {
 		return gerror.New("not found")
@@ -171,10 +185,23 @@ func UserDiscountRollback(ctx context.Context, id int64) error {
 		dao.MerchantUserDiscountCode.Columns().UniqueId:  fmt.Sprintf("%s_%d", one.UniqueId, gtime.Now().Timestamp()),
 		dao.MerchantUserDiscountCode.Columns().GmtModify: gtime.Now(),
 	}).Where(dao.MerchantUserDiscountCode.Columns().Id, id).OmitNil().Update()
+	if err == nil && quantity2.GetDiscountQuantityUsedCount(ctx, uint64(id)) > 0 {
+		_, _ = g.Redis().DecrBy(ctx, quantity2.GetDiscountQuantityUsedCountCacheKey(one.Code), 1)
+	}
 	return err
 }
 
 func UserDiscountRollbackFromPayment(ctx context.Context, paymentId string) error {
+	if len(paymentId) == 0 {
+		g.Log().Error(ctx, "UserDiscountRollbackFromPayment invalid paymentId:%s", paymentId)
+		return nil
+	}
+	// todo mark improve alone payment don't need rollback discount
+	invoice := query.GetInvoiceByPaymentId(ctx, paymentId)
+	if invoice == nil {
+		g.Log().Error(ctx, "UserDiscountRollbackFromPayment invoice not found, paymentId:%s", paymentId)
+		return nil
+	}
 	var one *entity.MerchantUserDiscountCode
 	err := dao.MerchantUserDiscountCode.Ctx(ctx).
 		Where(dao.MerchantUserDiscountCode.Columns().PaymentId, paymentId).
@@ -182,7 +209,7 @@ func UserDiscountRollbackFromPayment(ctx context.Context, paymentId string) erro
 		Where(dao.MerchantUserDiscountCode.Columns().IsDeleted, 0).
 		Scan(&one)
 	if one != nil {
-		return UserDiscountRollback(ctx, one.Id)
+		return userDiscountRollback(ctx, one.Id)
 	}
 	return err
 }

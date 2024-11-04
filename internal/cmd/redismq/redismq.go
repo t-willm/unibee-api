@@ -6,9 +6,10 @@ import (
 
 var (
 	TopicTest1                            = redismq.MQTopicEnum{Topic: "unibee", Tag: "test1", Description: "redismq test1"}
-	TopicTest2                            = redismq.MQTopicEnum{Topic: "unibee", Tag: "test2", Description: "redismq test2"}
-	TopicGatewayPayV2WebHookReceive       = redismq.MQTopicEnum{Topic: "unibee", Tag: "gatewaypaywebhookreceivev2", Description: "gatewaypaywebhookv2"}
-	TopicUserPaymentMethodChanged         = redismq.MQTopicEnum{Topic: "unibee_user", Tag: "payment_method_changed", Description: "user change payment method"}
+	TopicUserPaymentMethodChange          = redismq.MQTopicEnum{Topic: "unibee_user", Tag: "payment_method_change", Description: "user change payment method"}
+	TopicUserMetricUpdate                 = redismq.MQTopicEnum{Topic: "unibee_user", Tag: "metric_update", Description: "user metric update"}
+	TopicUserAccountCreate                = redismq.MQTopicEnum{Topic: "unibee_user", Tag: "account_create", Description: "user account create"}
+	TopicUserAccountUpdate                = redismq.MQTopicEnum{Topic: "unibee_user", Tag: "account_update", Description: "user account update"}
 	TopicPaymentCreated                   = redismq.MQTopicEnum{Topic: "unibee_payment", Tag: "payment_created", Description: "payment created"}
 	TopicPaymentChecker                   = redismq.MQTopicEnum{Topic: "unibee_payment", Tag: "payment_checker", Description: "payment status checker"}
 	TopicPaymentCancel                    = redismq.MQTopicEnum{Topic: "unibee_payment", Tag: "payment_cancelled", Description: "payment cancelled"}

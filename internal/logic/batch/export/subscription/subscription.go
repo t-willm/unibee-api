@@ -116,7 +116,7 @@ func (t TaskSubscriptionExport) PageData(ctx context.Context, page int, count in
 			}
 			var productName = ""
 			if one.Plan.ProductId > 0 {
-				product := query.GetProductById(ctx, uint64(one.Plan.ProductId))
+				product := query.GetProductById(ctx, uint64(one.Plan.ProductId), merchant.Id)
 				if product != nil {
 					productName = product.ProductName
 				}

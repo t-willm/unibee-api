@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
 	"strconv"
 	"strings"
+	redismq2 "unibee/internal/cmd/redismq"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/operation_log"
 	"unibee/internal/logic/vat_gateway"
@@ -41,6 +43,12 @@ func UpdateUserVatNumber(ctx context.Context, userId uint64, vatNumber string) {
 					PlanId:         0,
 					DiscountCode:   "",
 				}, nil)
+				_, _ = redismq.Send(&redismq.Message{
+					Topic:      redismq2.TopicUserAccountUpdate.Topic,
+					Tag:        redismq2.TopicUserAccountUpdate.Tag,
+					Body:       fmt.Sprintf("%d", user.Id),
+					CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+				})
 				if err != nil {
 					g.Log().Errorf(ctx, "UpdateUserVatNumber userId:%d vatNumber:%s, error:%s", userId, vatNumber, err.Error())
 				} else {
@@ -64,6 +72,12 @@ func UpdateUserVatNumber(ctx context.Context, userId uint64, vatNumber string) {
 			PlanId:         0,
 			DiscountCode:   "",
 		}, nil)
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicUserAccountUpdate.Topic,
+			Tag:        redismq2.TopicUserAccountUpdate.Tag,
+			Body:       fmt.Sprintf("%d", user.Id),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 }
 
@@ -94,6 +108,12 @@ func UpdateUserCountryCode(ctx context.Context, userId uint64, countryCode strin
 				PlanId:         0,
 				DiscountCode:   "",
 			}, nil)
+			_, _ = redismq.Send(&redismq.Message{
+				Topic:      redismq2.TopicUserAccountUpdate.Topic,
+				Tag:        redismq2.TopicUserAccountUpdate.Tag,
+				Body:       fmt.Sprintf("%d", user.Id),
+				CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+			})
 			if err != nil {
 				g.Log().Errorf(ctx, "UpdateUserCountryCode userId:%d CountryCode:%s, error:%s", userId, countryCode, err.Error())
 			} else {

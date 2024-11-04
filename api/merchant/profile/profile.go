@@ -18,9 +18,11 @@ type GetRes struct {
 	TimeZone             []string                     `json:"TimeZone" description:"TimeZone List" `
 	Currency             []*bean.Currency             `json:"Currency" description:"Currency List" `
 	Gateways             []*bean.Gateway              `json:"gateways" description:"Gateway List" `
+	ExchangeRateApiKey   string                       `json:"exchangeRateApiKey" description:"ExchangeRateApiKey" `
 	OpenApiKey           string                       `json:"openApiKey" description:"OpenApiKey" `
 	SendGridKey          string                       `json:"sendGridKey" description:"SendGridKey" `
 	VatSenseKey          string                       `json:"vatSenseKey" description:"VatSenseKey" `
+	EmailSender          *bean.Sender                 `json:"emailSender" description:"EmailSender" `
 	SegmentServerSideKey string                       `json:"segmentServerSideKey" description:"SegmentServerSideKey" `
 	SegmentUserPortalKey string                       `json:"segmentUserPortalKey" description:"SegmentUserPortalKey" `
 	IsOwner              bool                         `json:"isOwner" description:"Check Member is Owner" `

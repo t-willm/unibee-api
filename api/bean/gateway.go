@@ -4,6 +4,7 @@ import (
 	"unibee/internal/consts"
 	gateway2 "unibee/internal/logic/gateway"
 	entity "unibee/internal/model/entity/default"
+	"unibee/utility"
 	"unicode"
 )
 
@@ -12,8 +13,8 @@ type Gateway struct {
 	GatewayName        string          `json:"gatewayName"`
 	DisplayName        string          `json:"displayName"`
 	GatewayLogo        string          `json:"gatewayLogo"`
-	GatewayKey         string          `json:"gatewayKey"            description:""`                                                        //
-	GatewayType        int64           `json:"gatewayType"           description:"gateway type，1-Bank Card ｜ 2-Crypto | 3 - Wire Transfer"` // gateway type，1-Default｜ 2-Crypto
+	GatewayKey         string          `json:"gatewayKey"            description:""`
+	GatewayType        int64           `json:"gatewayType"           description:"gateway type，1-Bank Card ｜ 2-Crypto | 3 - Wire Transfer"`
 	CountryConfig      map[string]bool `json:"countryConfig"`
 	CreateTime         int64           `json:"createTime"            description:"create utc time"` // create utc time
 	MinimumAmount      int64           `json:"minimumAmount"   description:"The minimum amount of wire transfer" `
@@ -55,8 +56,8 @@ func SimplifyGateway(one *entity.MerchantGateway) *Gateway {
 		MinimumAmount:      one.MinimumAmount,
 		Bank:               bank,
 		WebhookEndpointUrl: webhookEndpointUrl,
-		GatewayKey:         one.GatewayKey,
-		WebhookSecret:      one.WebhookSecret,
+		GatewayKey:         utility.HideStar(one.GatewayKey),
+		WebhookSecret:      utility.HideStar(one.WebhookSecret),
 	}
 }
 

@@ -43,10 +43,6 @@ func LinkExportEntry(r *ghttp.Request) {
 		return
 	}
 
-	if taskId <= 0 {
-		r.Response.Writeln("TaskId invalid")
-		return
-	}
 	var one *entity.MerchantBatchTask
 	err := dao.MerchantBatchTask.Ctx(r.Context()).
 		Where(dao.MerchantBatchTask.Columns().Id, taskId).

@@ -235,6 +235,55 @@ func DeleteMerchantDiscountCode(ctx context.Context, merchantId uint64, id uint6
 	return err
 }
 
+func QuantityIncrement(ctx context.Context, merchantId uint64, id uint64, amount uint64) error {
+	utility.Assert(id > 0, "invalid Id")
+	utility.Assert(amount > 0, "invalid Increase Value")
+	one := query.GetDiscountById(ctx, id)
+	utility.Assert(one != nil, "discount not found :"+strconv.FormatUint(id, 10))
+	utility.Assert(one.MerchantId == merchantId, "Discount merchant not match :"+strconv.FormatUint(id, 10))
+	utility.Assert(one.Type == 0, "Delete not available for external code :"+strconv.FormatUint(id, 10))
+	_, err := dao.MerchantDiscountCode.Ctx(ctx).Where(dao.MerchantDiscountCode.Columns().Id, id).Increment(dao.MerchantDiscountCode.Columns().Quantity, amount)
+	if err != nil {
+		return err
+	}
+	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
+		MerchantId:     one.MerchantId,
+		Target:         fmt.Sprintf("DiscountCode(%s)", one.Code),
+		Content:        fmt.Sprintf("QuantityIncrement(%d)", amount),
+		UserId:         0,
+		SubscriptionId: "",
+		InvoiceId:      "",
+		PlanId:         0,
+		DiscountCode:   one.Code,
+	}, err)
+	return err
+}
+
+func QuantityDecrement(ctx context.Context, merchantId uint64, id uint64, amount uint64) error {
+	utility.Assert(id > 0, "invalid Id")
+	utility.Assert(amount > 0, "invalid Decrease Value")
+	one := query.GetDiscountById(ctx, id)
+	utility.Assert(one != nil, "discount not found :"+strconv.FormatUint(id, 10))
+	utility.Assert(one.MerchantId == merchantId, "Discount merchant not match :"+strconv.FormatUint(id, 10))
+	utility.Assert(one.Type == 0, "Delete not available for external code :"+strconv.FormatUint(id, 10))
+	utility.Assert(uint64(one.Quantity) >= amount, "decrease value should not greater than code's quantity")
+	_, err := dao.MerchantDiscountCode.Ctx(ctx).Where(dao.MerchantDiscountCode.Columns().Id, id).Decrement(dao.MerchantDiscountCode.Columns().Quantity, amount)
+	if err != nil {
+		return err
+	}
+	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
+		MerchantId:     one.MerchantId,
+		Target:         fmt.Sprintf("DiscountCode(%s)", one.Code),
+		Content:        fmt.Sprintf("QuantityDecrement(%d)", amount),
+		UserId:         0,
+		SubscriptionId: "",
+		InvoiceId:      "",
+		PlanId:         0,
+		DiscountCode:   one.Code,
+	}, err)
+	return err
+}
+
 func HardDeleteMerchantDiscountCode(ctx context.Context, merchantId uint64, id uint64) error {
 	utility.Assert(merchantId > 0, "invalid MerchantId")
 	utility.Assert(id > 0, "invalid Id")

@@ -11,6 +11,7 @@ import (
 	"unibee/internal/consts"
 	dao "unibee/internal/dao/default"
 	email2 "unibee/internal/logic/email"
+	metric2 "unibee/internal/logic/metric"
 	"unibee/internal/logic/payment/method"
 	subscription2 "unibee/internal/logic/subscription"
 	"unibee/internal/logic/subscription/timeline"
@@ -106,6 +107,16 @@ func HandleSubscriptionFirstInvoicePaid(ctx context.Context, sub *entity.Subscri
 			Body:       sub.SubscriptionId,
 			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 		})
+		_, _ = redismq.Send(&redismq.Message{
+			Topic: redismq2.TopicUserMetricUpdate.Topic,
+			Tag:   redismq2.TopicUserMetricUpdate.Tag,
+			Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+				UserId:         sub.UserId,
+				SubscriptionId: sub.SubscriptionId,
+				Description:    "SubscriptionFirstActivate",
+			}),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 	return nil
 }
@@ -123,7 +134,6 @@ func HandleSubscriptionNextBillingCyclePaymentSuccess(ctx context.Context, sub *
 		// sub cycle never go back time
 		return nil
 	}
-	var dunningTime = subscription2.GetDunningTimeFromEnd(ctx, utility.MaxInt64(invoice.PeriodEnd, sub.TrialEnd), sub.PlanId)
 	var recurringDiscountCode *string
 	if len(invoice.DiscountCode) > 0 {
 		discount := query.GetDiscountByCode(ctx, invoice.MerchantId, invoice.DiscountCode)
@@ -136,6 +146,7 @@ func HandleSubscriptionNextBillingCyclePaymentSuccess(ctx context.Context, sub *
 		billingCycleAnchor = sub.BillingCycleAnchor
 	}
 	periodEnd := utility.MaxInt64(invoice.PeriodEnd, sub.CurrentPeriodEnd)
+	var dunningTime = subscription2.GetDunningTimeFromEnd(ctx, periodEnd, sub.PlanId)
 	_, err := dao.Subscription.Ctx(ctx).Data(g.Map{
 		dao.Subscription.Columns().Status:                 consts.SubStatusActive,
 		dao.Subscription.Columns().BillingCycleAnchor:     billingCycleAnchor,
@@ -173,6 +184,16 @@ func HandleSubscriptionNextBillingCyclePaymentSuccess(ctx context.Context, sub *
 				CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 			})
 		}
+		_, _ = redismq.Send(&redismq.Message{
+			Topic: redismq2.TopicUserMetricUpdate.Topic,
+			Tag:   redismq2.TopicUserMetricUpdate.Tag,
+			Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+				UserId:         sub.UserId,
+				SubscriptionId: sub.SubscriptionId,
+				Description:    "SubscriptionPaymentSuccess",
+			}),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 	// need cancel payment、 invoice and send invoice email
 	return nil
@@ -191,6 +212,8 @@ func HandleSubscriptionIncomplete(ctx context.Context, subscriptionId string, no
 }
 
 func MakeSubscriptionIncomplete(ctx context.Context, subscriptionId string) error {
+	utility.Assert(len(subscriptionId) > 0, "subscriptionId is nil")
+	sub := query.GetSubscriptionBySubscriptionId(ctx, subscriptionId)
 	_, err := dao.Subscription.Ctx(ctx).Data(g.Map{
 		dao.Subscription.Columns().Status:         consts.SubStatusIncomplete,
 		dao.Subscription.Columns().GmtModify:      gtime.Now(),
@@ -203,6 +226,16 @@ func MakeSubscriptionIncomplete(ctx context.Context, subscriptionId string) erro
 		Topic:      redismq2.TopicSubscriptionIncomplete.Topic,
 		Tag:        redismq2.TopicSubscriptionIncomplete.Tag,
 		Body:       subscriptionId,
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         sub.UserId,
+			SubscriptionId: sub.SubscriptionId,
+			Description:    "SubscriptionIncomplete",
+		}),
 		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 	})
 	return nil

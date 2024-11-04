@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	go_redismq "github.com/jackyang-hk/go-redismq"
 	"unibee/internal/cmd/config"
@@ -42,6 +43,7 @@ func IsPremiumVersion(ctx context.Context, merchantId uint64) bool {
 		Request: merchantId,
 	}, 0)
 	if license == nil || !license.Status {
+		g.Log().Errorf(ctx, "Get IsPremiumVersion error ,license:%s", utility.MarshalToJsonString(license))
 		return false
 	}
 	var one *License

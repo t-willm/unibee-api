@@ -2,6 +2,7 @@ package query
 
 import (
 	"context"
+	"strings"
 	dao "unibee/internal/dao/default"
 	entity "unibee/internal/model/entity/default"
 )
@@ -23,6 +24,7 @@ func GetUserAccountByEmail(ctx context.Context, merchantId uint64, email string)
 	if len(email) == 0 {
 		return nil
 	}
+	email = strings.TrimSpace(email)
 	err := dao.UserAccount.Ctx(ctx).
 		Where(dao.UserAccount.Columns().Email, email).
 		Where(dao.UserAccount.Columns().MerchantId, merchantId).

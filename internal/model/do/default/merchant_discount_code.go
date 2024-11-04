@@ -34,4 +34,5 @@ type MerchantDiscountCode struct {
 	MetaData           interface{} // meta_data(json)
 	Type               interface{} // type, 1-external discount code
 	PlanIds            interface{} // Ids of plan which discount code can effect, default effect all plans if not set
+	Quantity           interface{} // quantity of code
 }

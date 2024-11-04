@@ -21,6 +21,7 @@ import (
 	"unibee/internal/logic/currency"
 	"unibee/internal/logic/discount"
 	email2 "unibee/internal/logic/email"
+	"unibee/internal/logic/fiat_exchange"
 	"unibee/internal/logic/gateway/api"
 	"unibee/internal/logic/gateway/gateway_bean"
 	"unibee/internal/logic/invoice/handler"
@@ -28,7 +29,6 @@ import (
 	"unibee/internal/logic/payment/callback"
 	"unibee/internal/logic/payment/event"
 	handler2 "unibee/internal/logic/payment/handler"
-	"unibee/internal/logic/subscription/config"
 	"unibee/internal/logic/user/sub_update"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
@@ -81,7 +81,7 @@ func GatewayPaymentCreate(ctx context.Context, createPayContext *gateway_bean.Ga
 		} else {
 			createPayContext.Pay.GasPayer = "user" // default user pay the gas
 		}
-		exchangeApiKeyConfig := merchant_config.GetMerchantConfig(ctx, createPayContext.Gateway.MerchantId, config.FiatExchangeApiKey)
+		exchangeApiKeyConfig := merchant_config.GetMerchantConfig(ctx, createPayContext.Gateway.MerchantId, fiat_exchange.FiatExchangeApiKey)
 		if exchangeApiKeyConfig != nil && len(exchangeApiKeyConfig.ConfigValue) > 0 {
 			if createPayContext.Pay.Currency == "USD" {
 				createPayContext.Pay.CryptoAmount = createPayContext.Pay.TotalAmount
@@ -322,7 +322,7 @@ func CreateSubInvoicePaymentDefaultAutomatic(ctx context.Context, invoice *entit
 	})
 
 	if err == nil && res.Payment != nil {
-		if err == nil && res.Status != consts.PaymentSuccess && !manualPayment {
+		if res.Status != consts.PaymentSuccess && !manualPayment {
 			//need send invoice for authorised
 			SendAuthorizedEmailBackground(invoice)
 		}

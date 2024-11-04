@@ -2,9 +2,12 @@ package merchant
 
 import (
 	"context"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"unibee/api/bean"
 	"unibee/api/bean/detail"
 	"unibee/internal/consts"
+	dao "unibee/internal/dao/default"
 	_interface "unibee/internal/interface"
 	"unibee/internal/logic/subscription/service"
 	user2 "unibee/internal/logic/user"
@@ -15,7 +18,30 @@ import (
 )
 
 func (c *ControllerSubscription) CreatePreview(ctx context.Context, req *subscription.CreatePreviewReq) (res *subscription.CreatePreviewRes, err error) {
-	if req.UserId == 0 && req.User != nil {
+	if req.UserId > 0 {
+		user := query.GetUserAccountById(ctx, req.UserId)
+		utility.Assert(user != nil, "user not found")
+		if len(req.Email) > 0 {
+			utility.Assert(user.Email == req.Email, "invalid email, not match")
+		} else if req.User != nil {
+			utility.Assert(user.Email == req.User.Email, "invalid user, not match")
+			// Update user profile
+			_, _ = dao.UserAccount.Ctx(ctx).Data(g.Map{
+				dao.UserAccount.Columns().Address:            req.User.Address,
+				dao.UserAccount.Columns().Phone:              req.User.Phone,
+				dao.UserAccount.Columns().FirstName:          req.User.FirstName,
+				dao.UserAccount.Columns().LastName:           req.User.LastName,
+				dao.UserAccount.Columns().City:               req.User.City,
+				dao.UserAccount.Columns().Type:               req.User.Type,
+				dao.UserAccount.Columns().ZipCode:            req.User.ZipCode,
+				dao.UserAccount.Columns().Language:           req.User.Language,
+				dao.UserAccount.Columns().Address:            req.User.Address,
+				dao.UserAccount.Columns().CompanyName:        req.User.CompanyName,
+				dao.UserAccount.Columns().RegistrationNumber: req.User.RegistrationNumber,
+				dao.UserAccount.Columns().GmtModify:          gtime.Now(),
+			}).Where(dao.UserAccount.Columns().Id, req.UserId).OmitEmpty().Update()
+		}
+	} else if req.UserId == 0 && req.User != nil {
 		user, err := user2.QueryOrCreateUser(ctx, &user2.NewUserInternalReq{
 			ExternalUserId:     req.User.ExternalUserId,
 			Email:              req.User.Email,
@@ -73,21 +99,23 @@ func (c *ControllerSubscription) CreatePreview(ctx context.Context, req *subscri
 		}
 	}
 	return &subscription.CreatePreviewRes{
-		Plan:              bean.SimplifyPlan(prepare.Plan),
-		TrialEnd:          prepare.TrialEnd,
-		Quantity:          prepare.Quantity,
-		Gateway:           bean.SimplifyGateway(prepare.Gateway),
-		AddonParams:       prepare.AddonParams,
-		Addons:            prepare.Addons,
-		OriginAmount:      prepare.OriginAmount,
-		TotalAmount:       prepare.TotalAmount,
-		DiscountAmount:    prepare.DiscountAmount,
-		Currency:          prepare.Currency,
-		VatNumber:         prepare.VatNumber,
-		VatNumberValidate: prepare.VatNumberValidate,
-		VatCountryCode:    prepare.VatCountryCode,
-		VatCountryName:    prepare.VatCountryName,
-		TaxPercentage:     prepare.TaxPercentage,
+		Plan:                           bean.SimplifyPlan(prepare.Plan),
+		TrialEnd:                       prepare.TrialEnd,
+		Quantity:                       prepare.Quantity,
+		Gateway:                        bean.SimplifyGateway(prepare.Gateway),
+		AddonParams:                    prepare.AddonParams,
+		Addons:                         prepare.Addons,
+		TaxPercentage:                  prepare.TaxPercentage,
+		SubscriptionAmountExcludingTax: prepare.Invoice.SubscriptionAmountExcludingTax,
+		TaxAmount:                      prepare.Invoice.TaxAmount,
+		DiscountAmount:                 prepare.DiscountAmount,
+		TotalAmount:                    prepare.TotalAmount,
+		OriginAmount:                   prepare.OriginAmount,
+		Currency:                       prepare.Currency,
+		VatNumber:                      prepare.VatNumber,
+		VatNumberValidate:              prepare.VatNumberValidate,
+		VatCountryCode:                 prepare.VatCountryCode,
+		VatCountryName:                 prepare.VatCountryName,
 		Invoice: &bean.Invoice{
 			InvoiceName:                    prepare.Invoice.InvoiceName,
 			OriginAmount:                   prepare.Invoice.OriginAmount,
@@ -97,6 +125,7 @@ func (c *ControllerSubscription) CreatePreview(ctx context.Context, req *subscri
 			DiscountCode:                   prepare.Invoice.DiscountCode,
 			Currency:                       prepare.Invoice.Currency,
 			TaxAmount:                      prepare.Invoice.TaxAmount,
+			TaxPercentage:                  prepare.Invoice.TaxPercentage,
 			SubscriptionAmount:             prepare.Invoice.SubscriptionAmount,
 			SubscriptionAmountExcludingTax: prepare.Invoice.SubscriptionAmountExcludingTax,
 			Lines:                          prepare.Invoice.Lines,
@@ -107,5 +136,6 @@ func (c *ControllerSubscription) CreatePreview(ctx context.Context, req *subscri
 		VatNumberValidateMessage:       prepare.VatNumberValidateMessage,
 		DiscountMessage:                prepare.DiscountMessage,
 		OtherPendingCryptoSubscription: pendingCryptoSub,
+		OtherActiveSubscriptionId:      prepare.OtherActiveSubscriptionId,
 	}, nil
 }

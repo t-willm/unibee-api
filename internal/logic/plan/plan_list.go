@@ -61,7 +61,7 @@ func PlanDetail(ctx context.Context, merchantId uint64, planId uint64) (*plan.De
 	}
 	return &plan.DetailRes{
 		Plan: &detail.PlanDetail{
-			Product:          bean.SimplifyProduct(query.GetProductById(ctx, uint64(one.ProductId))),
+			Product:          bean.SimplifyProduct(query.GetProductById(ctx, uint64(one.ProductId), merchantId)),
 			Plan:             bean.SimplifyPlan(one),
 			MetricPlanLimits: metric.MerchantMetricPlanLimitCachedList(ctx, one.MerchantId, one.Id, false),
 			Addons:           bean.SimplifyPlanList(query.GetAddonsByIds(ctx, addonIds)),
@@ -120,7 +120,7 @@ func PlanList(ctx context.Context, req *ListInternalReq) (list []*detail.PlanDet
 	for _, p := range mainList {
 		if p.Type != consts.PlanTypeMain {
 			list = append(list, &detail.PlanDetail{
-				Product:          bean.SimplifyProduct(query.GetProductById(ctx, uint64(p.ProductId))),
+				Product:          bean.SimplifyProduct(query.GetProductById(ctx, uint64(p.ProductId), req.MerchantId)),
 				Plan:             bean.SimplifyPlan(p),
 				MetricPlanLimits: metric.MerchantMetricPlanLimitCachedList(ctx, p.MerchantId, p.Id, false),
 				Addons:           nil,
@@ -157,7 +157,7 @@ func PlanList(ctx context.Context, req *ListInternalReq) (list []*detail.PlanDet
 			}
 		}
 		list = append(list, &detail.PlanDetail{
-			Product:          bean.SimplifyProduct(query.GetProductById(ctx, uint64(p.ProductId))),
+			Product:          bean.SimplifyProduct(query.GetProductById(ctx, uint64(p.ProductId), req.MerchantId)),
 			Plan:             bean.SimplifyPlan(p),
 			MetricPlanLimits: metric.MerchantMetricPlanLimitCachedList(ctx, p.MerchantId, p.Id, false),
 			Addons:           nil,
