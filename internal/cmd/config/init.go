@@ -33,7 +33,7 @@ var (
 	databaseLink                     string
 	databaseDebug                    string
 	databaseCharset                  string
-	authLoginExpire                  int64
+	authLoginExpire                  *int64
 	authLoginExpireStr               string
 	loggerLevel                      string
 	nacosIpArg                       string
@@ -74,7 +74,10 @@ func Init() {
 	g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetFileName(DefaultConfigFileName)
 
 	if len(authLoginExpireStr) > 0 {
-		authLoginExpire, _ = strconv.ParseInt(authLoginExpireStr, 10, 64)
+		t, _ := strconv.ParseInt(authLoginExpireStr, 10, 64)
+		if t > 0 {
+			authLoginExpire = &t
+		}
 	}
 
 	// Parse Params
@@ -176,9 +179,12 @@ func SetupDefaultConfigs(ctx context.Context) {
 	setUpDefaultConfig(loggerConfig, "stdout", true, true)
 	authLoginConfig := g.Cfg().MustGet(ctx, "auth.login").Map()
 	utility.Assert(authLoginConfig != nil, "auth login config not found")
-	if authLoginExpire > 0 {
+	if authLoginExpire != nil {
 		setUpDefaultConfig(authLoginConfig, "expire", authLoginExpire, 600)
+	} else {
+		setUpDefaultConfig(authLoginConfig, "expire", 600, 600)
 	}
+
 	//vatConfig := g.Cfg().MustGet(ctx, "vatConfig").Map()
 	//if vatConfig != nil {
 	//	setUpDefaultConfig(vatConfig, "nonEuEnable", VatNonEuEnable, "false")
