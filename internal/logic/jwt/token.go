@@ -91,6 +91,7 @@ func getAuthTokenRedisKey(token string) string {
 func PutAuthTokenToCache(ctx context.Context, token string, value string) bool {
 	err := g.Redis().SetEX(ctx, getAuthTokenRedisKey(token), value, config.GetConfigInstance().Auth.Login.Expire)
 	if err != nil {
+		g.Log().Errorf(ctx, "PutAuthTokenToCache, error:%s", err.Error())
 		return false
 	}
 	return true
@@ -99,6 +100,7 @@ func PutAuthTokenToCache(ctx context.Context, token string, value string) bool {
 func PutAuthTokenToCacheWithExpire(ctx context.Context, token string, value string, expireSeconds int64) bool {
 	err := g.Redis().SetEX(ctx, getAuthTokenRedisKey(token), value, expireSeconds)
 	if err != nil {
+		g.Log().Errorf(ctx, "PutAuthTokenToCacheWithExpire, error:%s", err.Error())
 		return false
 	}
 	return true
@@ -107,6 +109,7 @@ func PutAuthTokenToCacheWithExpire(ctx context.Context, token string, value stri
 func IsAuthTokenAvailable(ctx context.Context, token string) bool {
 	get, err := g.Redis().Get(ctx, getAuthTokenRedisKey(token))
 	if err != nil {
+		g.Log().Errorf(ctx, "IsAuthTokenAvailable, error:%s", err.Error())
 		return false
 	}
 	if get != nil && len(get.String()) > 0 {
@@ -118,6 +121,7 @@ func IsAuthTokenAvailable(ctx context.Context, token string) bool {
 func ResetAuthTokenTTL(ctx context.Context, token string) bool {
 	expire, err := g.Redis().Expire(ctx, getAuthTokenRedisKey(token), config.GetConfigInstance().Auth.Login.Expire)
 	if err != nil {
+		g.Log().Errorf(ctx, "ResetAuthTokenTTL, error:%s", err.Error())
 		return false
 	}
 	return expire == 1
@@ -126,6 +130,7 @@ func ResetAuthTokenTTL(ctx context.Context, token string) bool {
 func DelAuthToken(ctx context.Context, token string) bool {
 	_, err := g.Redis().Del(ctx, getAuthTokenRedisKey(token))
 	if err != nil {
+		g.Log().Errorf(ctx, "DelAuthToken, error:%s", err.Error())
 		return false
 	}
 	return true
