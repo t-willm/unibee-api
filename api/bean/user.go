@@ -86,9 +86,15 @@ func SimplifyUserAccount(one *entity.UserAccount) *UserAccount {
 	if len(one.MetaData) > 0 {
 		err := gjson.Unmarshal([]byte(one.MetaData), &metadata)
 		if err != nil {
-			fmt.Printf("SimplifyPlan Unmarshal Metadata error:%s", err.Error())
+			fmt.Printf("SimplifyUserAccount Unmarshal Metadata error:%s", err.Error())
 		}
 	}
+	// todo mark hide metadata when not open api
+	//if _interface.Context() != nil &&
+	//	_interface.Context().Get(ctx) != nil &&
+	//	_interface.Context().Get(ctx).IsOpenApiCall {
+	//
+	//}
 	return &UserAccount{
 		Id:                 one.Id,
 		MerchantId:         one.MerchantId,

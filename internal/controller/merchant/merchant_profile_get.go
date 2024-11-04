@@ -10,6 +10,8 @@ import (
 	"unibee/internal/logic/analysis/segment"
 	"unibee/internal/logic/currency"
 	"unibee/internal/logic/email"
+	"unibee/internal/logic/fiat_exchange"
+	"unibee/internal/logic/merchant_config"
 	"unibee/internal/logic/vat_gateway"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
@@ -31,6 +33,19 @@ func (c *ControllerProfile) Get(ctx context.Context, req *profile.GetReq) (res *
 	utility.Assert(merchant != nil, "merchant not found")
 	_, vatData := vat_gateway.GetDefaultMerchantVatConfig(ctx, merchant.Id)
 	_, emailData := email.GetDefaultMerchantEmailConfig(ctx, merchant.Id)
+	var emailSender *bean.Sender
+	one := email.GetMerchantEmailSender(ctx, _interface.GetMerchantId(ctx))
+	if one != nil {
+		emailSender = &bean.Sender{
+			Name:    one.Name,
+			Address: one.Address,
+		}
+	}
+	exchangeApiKey := ""
+	exchangeApiKeyConfig := merchant_config.GetMerchantConfig(ctx, _interface.GetMerchantId(ctx), fiat_exchange.FiatExchangeApiKey)
+	if exchangeApiKeyConfig != nil {
+		exchangeApiKey = exchangeApiKeyConfig.ConfigValue
+	}
 	return &profile.GetRes{
 		Merchant:             bean.SimplifyMerchant(merchant),
 		MerchantMember:       detail.ConvertMemberToDetail(ctx, member),
@@ -39,8 +54,10 @@ func (c *ControllerProfile) Get(ctx context.Context, req *profile.GetReq) (res *
 		IsProd:               config.GetConfigInstance().IsProd(),
 		TimeZone:             time.GetTimeZoneList(),
 		Gateways:             bean.SimplifyGatewayList(query.GetMerchantGatewayList(ctx, merchant.Id)),
+		ExchangeRateApiKey:   utility.HideStar(exchangeApiKey),
 		OpenApiKey:           utility.HideStar(merchant.ApiKey),
 		SendGridKey:          utility.HideStar(emailData),
+		EmailSender:          emailSender,
 		VatSenseKey:          utility.HideStar(vatData),
 		SegmentServerSideKey: segment.GetMerchantSegmentServerSideConfig(ctx, merchant.Id),
 		SegmentUserPortalKey: segment.GetMerchantSegmentUserPortalConfig(ctx, merchant.Id),

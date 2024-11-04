@@ -42,6 +42,7 @@ type MerchantDiscountCodeColumns struct {
 	MetaData           string // meta_data(json)
 	Type               string // type, 1-external discount code
 	PlanIds            string // Ids of plan which discount code can effect, default effect all plans if not set
+	Quantity           string // quantity of code
 }
 
 // merchantDiscountCodeColumns holds the columns for table merchant_discount_code.
@@ -68,6 +69,7 @@ var merchantDiscountCodeColumns = MerchantDiscountCodeColumns{
 	MetaData:           "meta_data",
 	Type:               "type",
 	PlanIds:            "plan_ids",
+	Quantity:           "quantity",
 }
 
 // NewMerchantDiscountCodeDao creates and returns a new DAO object for table data access.

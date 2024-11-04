@@ -9,7 +9,6 @@ import (
 	"unibee/internal/consts"
 	"unibee/internal/consumer/webhook/event"
 	subscription3 "unibee/internal/consumer/webhook/subscription"
-	user2 "unibee/internal/consumer/webhook/user"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/invoice/service"
 	service2 "unibee/internal/logic/subscription/pending_update_cancel"
@@ -62,7 +61,7 @@ func (t SubscriptionFailedListener) Consume(ctx context.Context, message *redism
 	user_sub_plan.ReloadUserSubPlanCacheListBackground(sub.MerchantId, sub.UserId)
 	timeline.FinishOldTimelineBySubEnd(ctx, sub.SubscriptionId, consts.SubStatusFailed)
 	subscription3.SendMerchantSubscriptionWebhookBackground(sub, -10000, event.UNIBEE_WEBHOOK_EVENT_SUBSCRIPTION_FAILED, message.CustomData)
-	user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED)
+	//user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED, fmt.Sprintf("SubscriptionFailed#%s", sub.SubscriptionId))
 	return redismq.CommitMessage
 }
 

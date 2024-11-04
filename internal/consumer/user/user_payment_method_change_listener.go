@@ -19,11 +19,11 @@ type UserPaymentMethodChangeListener struct {
 }
 
 func (t UserPaymentMethodChangeListener) GetTopic() string {
-	return redismq2.TopicUserPaymentMethodChanged.Topic
+	return redismq2.TopicUserPaymentMethodChange.Topic
 }
 
 func (t UserPaymentMethodChangeListener) GetTag() string {
-	return redismq2.TopicUserPaymentMethodChanged.Tag
+	return redismq2.TopicUserPaymentMethodChange.Tag
 }
 
 func (t UserPaymentMethodChangeListener) Consume(ctx context.Context, message *redismq.Message) redismq.Action {
@@ -36,7 +36,7 @@ func (t UserPaymentMethodChangeListener) Consume(ctx context.Context, message *r
 			user := query.GetUserAccountById(ctx, userId)
 			userGatewayId, _ := strconv.ParseUint(user.GatewayId, 10, 64)
 			userPaymentMethod := user.PaymentMethod
-			if user != nil && userGatewayId > 0 {
+			if userGatewayId > 0 {
 				subs := query.GetLatestActiveOrIncompleteOrCreateSubscriptionsByUserId(ctx, user.Id, user.MerchantId)
 				for _, sub := range subs {
 					if sub != nil && (userGatewayId != sub.GatewayId || userPaymentMethod != sub.GatewayDefaultPaymentMethod) {

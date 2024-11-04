@@ -130,3 +130,23 @@ type PlanApplyPreviewRes struct {
 	DiscountCode   *bean.MerchantDiscountCode `json:"discountCode" dc:"The discount code object" `
 	FailureReason  string                     `json:"failureReason" dc:"The apply preview failure reason" `
 }
+
+type QuantityIncrementReq struct {
+	g.Meta `path:"/quantity_increment" tags:"Discount" method:"post" summary:"QuantityIncrement" dc:"Increase discount code quantity, if original quantity is 0, increase greater than 0 will enable quantity control"`
+	Id     uint64 `json:"id"                 description:"The discount's Id" v:"required"`
+	Amount uint64 `json:"amount" dc:"The discount quantity amount to increase, should greater than 0" `
+}
+
+type QuantityIncrementRes struct {
+	DiscountCode *bean.MerchantDiscountCode `json:"discountCode" dc:"The discount code object" `
+}
+
+type QuantityDecrementReq struct {
+	g.Meta `path:"/decrease_quantity" tags:"Discount" method:"post" summary:"QuantityDecrement" dc:"Decrease discount code quantity, the quantity after decreased should greater than 0, the action may disable quantity control if quantity decrease to 0 or lower than quantityUsed after decreased"`
+	Id     uint64 `json:"id"                 description:"The discount's Id" v:"required"`
+	Amount uint64 `json:"amount" dc:"The discount quantity Amount to decrease, should greater than 0" `
+}
+
+type QuantityDecrementRes struct {
+	DiscountCode *bean.MerchantDiscountCode `json:"discountCode" dc:"The discount code object" `
+}

@@ -194,9 +194,11 @@ type CreatePreviewRes struct {
 	Gateway                        *bean.Gateway              `json:"gateway"`
 	AddonParams                    []*bean.PlanAddonParam     `json:"addonParams"`
 	Addons                         []*bean.PlanAddonDetail    `json:"addons"`
-	OriginAmount                   int64                      `json:"originAmount"                `
-	TotalAmount                    int64                      `json:"totalAmount"                `
+	SubscriptionAmountExcludingTax int64                      `json:"subscriptionAmountExcludingTax"                `
+	TaxAmount                      int64                      `json:"taxAmount"                `
 	DiscountAmount                 int64                      `json:"discountAmount"`
+	TotalAmount                    int64                      `json:"totalAmount"                `
+	OriginAmount                   int64                      `json:"originAmount"                `
 	Currency                       string                     `json:"currency"              `
 	Invoice                        *bean.Invoice              `json:"invoice"`
 	UserId                         uint64                     `json:"userId" `
@@ -210,6 +212,7 @@ type CreatePreviewRes struct {
 	VatNumberValidateMessage       string                     `json:"vatNumberValidateMessage" `
 	DiscountMessage                string                     `json:"discountMessage" `
 	OtherPendingCryptoSubscription *detail.SubscriptionDetail `json:"otherPendingCryptoSubscription" `
+	OtherActiveSubscriptionId      string                     `json:"otherActiveSubscriptionId" description:"other active or incomplete subscription id "`
 }
 
 type CreateReq struct {

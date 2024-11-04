@@ -57,8 +57,16 @@ func createInvoicePdf(one *entity.Invoice, merchantInfo *entity.Merchant, user *
 	doc.SetInvoiceNumber(fmt.Sprintf("%s%s", api.GatewayShortNameMapping[invoiceGateway], one.InvoiceId))
 	doc.SetInvoiceDate(one.GmtCreate.Layout("2006-01-02"))
 
+	hideDetailStatus := metadata["hideDetailStatus"]
 	if one.Status == consts.InvoiceStatusProcessing {
 		doc.SetStatus("Process")
+		if hideDetailStatus != nil {
+			if _hideDetailStatus, ok := hideDetailStatus.(bool); ok {
+				if _hideDetailStatus {
+					doc.SetStatus("Not paid")
+				}
+			}
+		}
 	} else if one.Status == consts.InvoiceStatusPaid {
 		if len(one.RefundId) > 0 {
 			doc.SetStatus("Refunded")
@@ -67,10 +75,31 @@ func createInvoicePdf(one *entity.Invoice, merchantInfo *entity.Merchant, user *
 		}
 	} else if one.Status == consts.InvoiceStatusCancelled {
 		doc.SetStatus("Cancelled")
+		if hideDetailStatus != nil {
+			if _hideDetailStatus, ok := hideDetailStatus.(bool); ok {
+				if _hideDetailStatus {
+					doc.SetStatus("Not paid")
+				}
+			}
+		}
 	} else if one.Status == consts.InvoiceStatusFailed {
 		doc.SetStatus("Failed")
+		if hideDetailStatus != nil {
+			if _hideDetailStatus, ok := hideDetailStatus.(bool); ok {
+				if _hideDetailStatus {
+					doc.SetStatus("Not paid")
+				}
+			}
+		}
 	} else if one.Status == consts.InvoiceStatusReversed {
 		doc.SetStatus("Reversed")
+		if hideDetailStatus != nil {
+			if _hideDetailStatus, ok := hideDetailStatus.(bool); ok {
+				if _hideDetailStatus {
+					doc.SetStatus("Not paid")
+				}
+			}
+		}
 	}
 
 	doc.SetPaidDate(one.GmtModify.Layout("2006-01-02"))

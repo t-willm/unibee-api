@@ -16,7 +16,7 @@ func GetLatestSubscriptionByUserId(ctx context.Context, userId uint64, merchantI
 		Where(dao.Subscription.Columns().MerchantId, merchantId).
 		WhereIn(dao.Subscription.Columns().PlanId, GetPlanIdsByProductId(ctx, merchantId, productId)).
 		Where(dao.Subscription.Columns().IsDeleted, 0).
-		OrderDesc(dao.Subscription.Columns().GmtCreate).
+		OrderDesc(dao.Subscription.Columns().GmtModify).
 		Scan(&one)
 	if err != nil {
 		one = nil

@@ -21,3 +21,12 @@ type SendTemplateEmailToUserReq struct {
 
 type SendTemplateEmailToUserRes struct {
 }
+
+type SenderSetupReq struct {
+	g.Meta  `path:"/email_sender_setup" tags:"Email" method:"post" summary:"EmailSenderSetup"`
+	Name    string `json:"name"  dc:"The name of email sender, like 'no-reply'" v:"required"`
+	Address string `json:"address" dc:"The address of email sender, like 'no-reply@unibee.dev'" v:"required"`
+}
+
+type SenderSetupRes struct {
+}

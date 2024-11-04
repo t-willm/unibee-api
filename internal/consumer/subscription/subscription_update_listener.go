@@ -8,7 +8,6 @@ import (
 	redismq2 "unibee/internal/cmd/redismq"
 	"unibee/internal/consumer/webhook/event"
 	subscription3 "unibee/internal/consumer/webhook/subscription"
-	user2 "unibee/internal/consumer/webhook/user"
 	"unibee/internal/logic/subscription/pending_update_cancel"
 	"unibee/internal/logic/subscription/user_sub_plan"
 	"unibee/internal/logic/user/sub_update"
@@ -39,7 +38,7 @@ func (t SubscriptionUpdateListener) Consume(ctx context.Context, message *redism
 		}
 		user_sub_plan.ReloadUserSubPlanCacheListBackground(sub.MerchantId, sub.UserId)
 		subscription3.SendMerchantSubscriptionWebhookBackground(sub, -10000, event.UNIBEE_WEBHOOK_EVENT_SUBSCRIPTION_UPDATED, message.CustomData)
-		user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED)
+		//user2.SendMerchantUserMetricWebhookBackground(sub.UserId, sub.SubscriptionId, event.UNIBEE_WEBHOOK_EVENT_USER_METRIC_UPDATED, fmt.Sprintf("SubscriptionUpdate#%s", sub.SubscriptionId))
 		if len(sub.PendingUpdateId) > 0 {
 			err := pending_update_cancel.SubscriptionPendingUpdateCancel(ctx, sub.PendingUpdateId, "CancelByUpdate-"+sub.PendingUpdateId)
 			if err != nil {

@@ -11,6 +11,7 @@ import (
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	"os"
+	"unibee/internal/logic/email/sender"
 	"unibee/utility"
 )
 
@@ -24,8 +25,11 @@ var LangMap = map[string]string{
 
 // Sendgrid Template https://github.com/sendgrid/sendgrid-go/blob/main/use-cases/transactional-templates-with-mailer-helper.md
 // https://www.twilio.com/docs/sendgrid/api-reference
-func SendDynamicTemplateEmailToUser(emailGatewayKey string, mailTo string, subject string, templateId string, variables map[string]interface{}, language string) (result string, err error) {
-	from := mail.NewEmail("no-reply", "no-reply@unibee.dev")
+func SendDynamicTemplateEmailToUser(f *sender.Sender, emailGatewayKey string, mailTo string, subject string, templateId string, variables map[string]interface{}, language string) (result string, err error) {
+	if f == nil {
+		f = sender.GetDefaultSender()
+	}
+	from := mail.NewEmail(f.Name, f.Address)
 	to := mail.NewEmail(mailTo, mailTo)
 	message := mail.NewV3Mail()
 	message.SetFrom(from)
@@ -64,8 +68,11 @@ func SendDynamicTemplateEmailToUser(emailGatewayKey string, mailTo string, subje
 	return utility.MarshalToJsonString(response), nil
 }
 
-func SendDynamicPdfAttachEmailToUser(emailGatewayKey string, mailTo string, subject string, templateId string, variables map[string]interface{}, language string, pdfFilePath string, pdfFileName string) (result string, err error) {
-	from := mail.NewEmail("no-reply", "no-reply@unibee.dev")
+func SendDynamicPdfAttachEmailToUser(f *sender.Sender, emailGatewayKey string, mailTo string, subject string, templateId string, variables map[string]interface{}, language string, pdfFilePath string, pdfFileName string) (result string, err error) {
+	if f == nil {
+		f = sender.GetDefaultSender()
+	}
+	from := mail.NewEmail(f.Name, f.Address)
 	to := mail.NewEmail(mailTo, mailTo)
 	message := mail.NewV3Mail()
 	message.SetFrom(from)

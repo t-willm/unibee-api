@@ -32,4 +32,5 @@ type MerchantDiscountCode struct {
 	MetaData           string      `json:"metaData"           description:"meta_data(json)"`                                                                 // meta_data(json)
 	Type               int         `json:"type"               description:"type, 1-external discount code"`                                                  // type, 1-external discount code
 	PlanIds            string      `json:"planIds"            description:"Ids of plan which discount code can effect, default effect all plans if not set"` // Ids of plan which discount code can effect, default effect all plans if not set
+	Quantity           int64       `json:"quantity"           description:"quantity of code"`                                                                // quantity of code
 }

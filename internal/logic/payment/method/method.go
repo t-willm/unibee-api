@@ -3,6 +3,7 @@ package method
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
 	"strings"
 	"unibee/api/bean"
 	"unibee/internal/logic/gateway/api"
@@ -85,6 +86,7 @@ func QueryPaymentMethodList(ctx context.Context, req *PaymentMethodListInternalR
 		GatewayPaymentId: gatewayPaymentId,
 	})
 	if err != nil {
+		g.Log().Errorf(ctx, "GatewayUserPaymentMethodListQuery error:%s", err.Error())
 		return nil
 	}
 	if req.UserId > 0 {

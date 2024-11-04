@@ -14,6 +14,7 @@ import (
 	subscription3 "unibee/internal/consumer/webhook/subscription"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/discount"
+	handler3 "unibee/internal/logic/invoice/handler"
 	"unibee/internal/logic/invoice/invoice_compute"
 	handler2 "unibee/internal/logic/invoice/service"
 	"unibee/internal/logic/payment/service"
@@ -300,17 +301,27 @@ func SubPipeBillingCycleWalk(ctx context.Context, subId string, timeNow int64, s
 
 				if needTryInvoiceAutomaticPayment {
 					// finish the payment
-					// gatewayId, paymentMethodId := user.VerifyPaymentGatewayMethod(ctx, sub.UserId, nil, "", sub.SubscriptionId)
-					createRes, err := service.CreateSubInvoicePaymentDefaultAutomatic(ctx, latestInvoice, false, "", "", "SubscriptionBillingCycle", timeNow)
-					if err != nil {
-						g.Log().Errorf(ctx, "AutomaticPaymentByCycle CreateSubInvoicePaymentDefaultAutomatic err:", err.Error())
-						return nil, err
-					}
-
-					if createRes.Payment != nil && createRes.Status == consts.PaymentSuccess {
+					if latestInvoice.TotalAmount == 0 {
+						paidInvoice, err := handler3.MarkInvoiceAsPaidForZeroPayment(ctx, latestInvoice.InvoiceId)
+						if err != nil || paidInvoice.Status != consts.InvoiceStatusPaid {
+							g.Log().Errorf(ctx, "AutomaticPaymentByCycle MarkInvoiceAsPaidForZeroPayment err:", err.Error())
+							return nil, err
+						}
 						_ = handler.HandleSubscriptionNextBillingCyclePaymentSuccess(ctx, sub, latestInvoice)
+						return &BillingCycleWalkRes{WalkUnfinished: true, Message: fmt.Sprintf("Subscription Finish Zero Invoice Payment Result:%s", utility.MarshalToJsonString(paidInvoice))}, nil
+					} else {
+						// gatewayId, paymentMethodId := user.VerifyPaymentGatewayMethod(ctx, sub.UserId, nil, "", sub.SubscriptionId)
+						createRes, err := service.CreateSubInvoicePaymentDefaultAutomatic(ctx, latestInvoice, false, "", "", "SubscriptionBillingCycle", timeNow)
+						if err != nil {
+							g.Log().Errorf(ctx, "AutomaticPaymentByCycle CreateSubInvoicePaymentDefaultAutomatic err:", err.Error())
+							return nil, err
+						}
+
+						if createRes.Payment != nil && createRes.Status == consts.PaymentSuccess {
+							_ = handler.HandleSubscriptionNextBillingCyclePaymentSuccess(ctx, sub, latestInvoice)
+						}
+						return &BillingCycleWalkRes{WalkUnfinished: true, Message: fmt.Sprintf("Subscription Finish Invoice Payment Result:%s", utility.MarshalToJsonString(createRes))}, nil
 					}
-					return &BillingCycleWalkRes{WalkUnfinished: true, Message: fmt.Sprintf("Subscription Finish Invoice Payment Result:%s", utility.MarshalToJsonString(createRes))}, nil
 				} else if latestInvoice != nil && latestInvoice.GatewayId <= 0 {
 					return &BillingCycleWalkRes{WalkUnfinished: false, Message: "Nothing Todo, Seems Invoice Gateway Need Specified"}, nil
 				} else {

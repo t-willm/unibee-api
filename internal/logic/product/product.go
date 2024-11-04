@@ -11,6 +11,7 @@ import (
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
 	"unibee/utility"
+	"unibee/utility/unibee"
 )
 
 type NewInternalReq struct {
@@ -89,10 +90,37 @@ type EditInternalReq struct {
 func ProductEdit(ctx context.Context, req *EditInternalReq) (one *entity.Product, err error) {
 	utility.Assert(req != nil, "Req not found")
 	if req.ProductId == 0 {
-		utility.Assert(false, "Can't edit default product")
+		//utility.Assert(false, "Can't edit default product")
+		one = &entity.Product{
+			Id:          0,
+			MerchantId:  req.MerchantId,
+			ProductName: unibee.StringValue(req.ProductName),
+			Description: unibee.StringValue(req.Description),
+			ImageUrl:    unibee.StringValue(req.ImageUrl),
+			HomeUrl:     unibee.StringValue(req.HomeUrl),
+			Status:      1,
+			IsDeleted:   0,
+			CreateTime:  gtime.Now().Timestamp(),
+			MetaData:    utility.MarshalToJsonString(req.Metadata),
+		}
+		err = UpdateDefaultProd(ctx, one)
+		if err == nil {
+			operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
+				MerchantId:     req.MerchantId,
+				Target:         fmt.Sprintf("Product(%v)", 0),
+				Content:        "Edit",
+				UserId:         0,
+				SubscriptionId: "",
+				InvoiceId:      "",
+				PlanId:         0,
+				DiscountCode:   "",
+			}, err)
+		}
+		return
 	}
+
 	utility.Assert(req.ProductId > 0, "ProductId should > 0")
-	one = query.GetProductById(ctx, req.ProductId)
+	one = query.GetProductById(ctx, req.ProductId, req.MerchantId)
 	utility.Assert(one != nil, fmt.Sprintf("product not found, id:%d", req.ProductId))
 	utility.Assert(one.MerchantId == req.MerchantId, "Merchant not match")
 
@@ -120,7 +148,7 @@ func ProductEdit(ctx context.Context, req *EditInternalReq) (one *entity.Product
 		}).Where(dao.Product.Columns().Id, req.ProductId).OmitNil().Update()
 	}
 
-	one = query.GetProductById(ctx, req.ProductId)
+	one = query.GetProductById(ctx, req.ProductId, req.MerchantId)
 
 	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
 		MerchantId:     one.MerchantId,
@@ -135,12 +163,13 @@ func ProductEdit(ctx context.Context, req *EditInternalReq) (one *entity.Product
 	return one, nil
 }
 
-func ProductActivate(ctx context.Context, productId uint64) error {
+func ProductActivate(ctx context.Context, merchantId uint64, productId uint64) error {
 	if productId == 0 {
-		utility.Assert(false, "Can't edit default product")
+		//utility.Assert(false, "Can't edit default product")
+		return nil
 	}
 	utility.Assert(productId > 0, "invalid productId")
-	one := query.GetProductById(ctx, productId)
+	one := query.GetProductById(ctx, productId, merchantId)
 	utility.Assert(one != nil, "product not found, invalid productId")
 	if one.Status == 1 {
 		return nil
@@ -166,12 +195,12 @@ func ProductActivate(ctx context.Context, productId uint64) error {
 	return nil
 }
 
-func ProductInactivate(ctx context.Context, productId uint64) error {
+func ProductInactivate(ctx context.Context, merchantId uint64, productId uint64) error {
 	if productId == 0 {
-		utility.Assert(false, "Can't edit default product")
+		utility.Assert(false, "Can't Inactivate default product")
 	}
 	utility.Assert(productId > 0, "invalid productId")
-	one := query.GetProductById(ctx, productId)
+	one := query.GetProductById(ctx, productId, merchantId)
 	utility.Assert(one != nil, "product not found, invalid productId")
 	if one.Status == 2 {
 		return nil
@@ -197,12 +226,12 @@ func ProductInactivate(ctx context.Context, productId uint64) error {
 	return nil
 }
 
-func ProductCopy(ctx context.Context, productId uint64) (one *entity.Product, err error) {
+func ProductCopy(ctx context.Context, merchantId uint64, productId uint64) (one *entity.Product, err error) {
 	if productId == 0 {
 		utility.Assert(false, "Can't copy from default product")
 	}
 	utility.Assert(productId > 0, "ProductId should > 0")
-	one = query.GetProductById(ctx, productId)
+	one = query.GetProductById(ctx, productId, merchantId)
 	utility.Assert(one != nil, fmt.Sprintf("product not found, id:%d", productId))
 	one = &entity.Product{
 		CompanyId:   one.CompanyId,
@@ -234,12 +263,12 @@ func ProductCopy(ctx context.Context, productId uint64) (one *entity.Product, er
 	return one, nil
 }
 
-func ProductDelete(ctx context.Context, productId uint64) (err error) {
+func ProductDelete(ctx context.Context, merchantId uint64, productId uint64) (err error) {
 	if productId == 0 {
 		utility.Assert(false, "Can't delete default product")
 	}
 	utility.Assert(productId > 0, "productId invalid")
-	one := query.GetProductById(ctx, productId)
+	one := query.GetProductById(ctx, productId, merchantId)
 	utility.Assert(one != nil, fmt.Sprintf("product not found, id:%d", productId))
 	//utility.Assert(one.Status == 2, fmt.Sprintf("product is not inactive status, id:%d", productId))
 	list := query.GetPlansByProductId(ctx, one.MerchantId, int64(one.Id))

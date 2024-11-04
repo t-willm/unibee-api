@@ -11,6 +11,7 @@ import (
 	"unibee/internal/consts"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/email"
+	metric2 "unibee/internal/logic/metric"
 	subscription2 "unibee/internal/logic/subscription"
 	"unibee/internal/logic/subscription/timeline"
 	entity "unibee/internal/model/entity/default"
@@ -72,8 +73,11 @@ func HandlePendingUpdatePaymentSuccess(ctx context.Context, sub *entity.Subscrip
 	}
 
 	periodEnd := utility.MaxInt64(invoice.PeriodEnd, sub.CurrentPeriodEnd)
+	if one.EffectImmediate == 1 {
+		periodEnd = invoice.PeriodEnd
+	}
+	var dunningTime = subscription2.GetDunningTimeFromEnd(ctx, periodEnd, sub.PlanId)
 
-	var dunningTime = subscription2.GetDunningTimeFromEnd(ctx, utility.MaxInt64(invoice.PeriodEnd, sub.TrialEnd), sub.PlanId)
 	_, err = dao.Subscription.Ctx(ctx).Data(g.Map{
 		dao.Subscription.Columns().Status:                 consts.SubStatusActive,
 		dao.Subscription.Columns().BillingCycleAnchor:     billingCycleAnchor,
@@ -132,6 +136,16 @@ func HandlePendingUpdatePaymentSuccess(ctx context.Context, sub *entity.Subscrip
 				CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 			})
 		}
+		_, _ = redismq.Send(&redismq.Message{
+			Topic: redismq2.TopicUserMetricUpdate.Topic,
+			Tag:   redismq2.TopicUserMetricUpdate.Tag,
+			Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+				UserId:         sub.UserId,
+				SubscriptionId: sub.SubscriptionId,
+				Description:    "SubscriptionUpdateSuccess",
+			}),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 	return true, nil
 }

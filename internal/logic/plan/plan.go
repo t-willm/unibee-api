@@ -21,6 +21,14 @@ import (
 	"unibee/utility/unibee"
 )
 
+var PlanIntervals = []string{"day", "month", "year", "week"}
+var PlanIntervalLength = map[string]int{
+	"day":   1,
+	"week":  7,
+	"month": 30,
+	"year":  365,
+}
+
 func PlanPublish(ctx context.Context, planId uint64) (err error) {
 	utility.Assert(planId > 0, "invalid planId")
 	one := query.GetPlanById(ctx, planId)
@@ -106,7 +114,7 @@ func PlanCreate(ctx context.Context, req *PlanInternalReq) (one *entity.Plan, er
 	utility.Assert(currency.IsFiatCurrencySupport(req.Currency), "currency not support")
 	// product check and update
 	if req.ProductId > 0 {
-		product := query.GetProductById(ctx, uint64(req.ProductId))
+		product := query.GetProductById(ctx, uint64(req.ProductId), req.MerchantId)
 		utility.Assert(product != nil && product.Status == 1, "product not found or product not activate")
 	}
 
@@ -172,8 +180,9 @@ func PlanCreate(ctx context.Context, req *PlanInternalReq) (one *entity.Plan, er
 		err = dao.Plan.Ctx(ctx).WhereIn(dao.Plan.Columns().Id, req.AddonIds).OmitEmpty().Scan(&allAddonList)
 		for _, addonPlan := range allAddonList {
 			utility.Assert(addonPlan.Type == consts.PlanTypeRecurringAddon, fmt.Sprintf("plan not recurring addon type, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("add plan not published status, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Currency == req.Currency, fmt.Sprintf("add plan currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("addon not published status, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Currency == req.Currency, fmt.Sprintf("addon currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.ProductId == req.ProductId, fmt.Sprintf("addon product not match plan's product, id:%d", addonPlan.Id))
 		}
 	}
 
@@ -184,6 +193,7 @@ func PlanCreate(ctx context.Context, req *PlanInternalReq) (one *entity.Plan, er
 			utility.Assert(addonPlan.Type == consts.PlanTypeOnetimeAddon, fmt.Sprintf("plan not onetime addon type, id:%d", addonPlan.Id))
 			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("add plan not published status, id:%d", addonPlan.Id))
 			utility.Assert(addonPlan.Currency == req.Currency, fmt.Sprintf("add plan currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.ProductId == req.ProductId, fmt.Sprintf("addon product not match plan's product, id:%d", addonPlan.Id))
 		}
 	}
 
@@ -302,7 +312,7 @@ func PlanEdit(ctx context.Context, req *EditInternalReq) (one *entity.Plan, err 
 
 	// product check and update
 	if req.ProductId != nil && *req.ProductId > 0 {
-		product := query.GetProductById(ctx, uint64(*req.ProductId))
+		product := query.GetProductById(ctx, uint64(*req.ProductId), req.MerchantId)
 		utility.Assert(product != nil && product.Status == 1, "product not found or product not activate")
 	}
 
@@ -386,8 +396,9 @@ func PlanEdit(ctx context.Context, req *EditInternalReq) (one *entity.Plan, err 
 		err = dao.Plan.Ctx(ctx).WhereIn(dao.Plan.Columns().Id, req.AddonIds).OmitEmpty().Scan(&allAddonList)
 		for _, addonPlan := range allAddonList {
 			utility.Assert(addonPlan.Type == consts.PlanTypeRecurringAddon, fmt.Sprintf("plan not recurring addon type, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("add plan not published status, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("add plan currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("addon not published status, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("addon currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.ProductId == one.ProductId, fmt.Sprintf("addon product not match plan's product, id:%d", addonPlan.Id))
 		}
 	}
 
@@ -396,8 +407,9 @@ func PlanEdit(ctx context.Context, req *EditInternalReq) (one *entity.Plan, err 
 		err = dao.Plan.Ctx(ctx).WhereIn(dao.Plan.Columns().Id, req.OnetimeAddonIds).OmitEmpty().Scan(&allAddonList)
 		for _, addonPlan := range allAddonList {
 			utility.Assert(addonPlan.Type == consts.PlanTypeOnetimeAddon, fmt.Sprintf("plan not onetime addon type, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("add plan not published status, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("add plan currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("addon not published status, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("addon currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.ProductId == one.ProductId, fmt.Sprintf("addon product not match plan's product, id:%d", addonPlan.Id))
 		}
 	}
 
@@ -617,10 +629,11 @@ func PlanAddonsBinding(ctx context.Context, req *plan.AddonsBindingReq) (one *en
 		err = dao.Plan.Ctx(ctx).WhereIn(dao.Plan.Columns().Id, req.AddonIds).Scan(&allAddonList)
 		for _, addonPlan := range allAddonList {
 			utility.Assert(addonPlan.Type == consts.PlanTypeRecurringAddon, fmt.Sprintf("plan not addon recurring type, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("add plan not published status, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("add plan currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("addon not published status, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("addon currency not match plan's currency, id:%d", addonPlan.Id))
 			//addon interval verify
 			utility.Assert(addonPlan.IntervalUnit == one.IntervalUnit && addonPlan.IntervalCount == one.IntervalCount, fmt.Sprintf("addon not match plan's recycle interval, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.ProductId == one.ProductId, fmt.Sprintf("addon product not match plan's product, id:%d", addonPlan.Id))
 		}
 	}
 
@@ -630,8 +643,9 @@ func PlanAddonsBinding(ctx context.Context, req *plan.AddonsBindingReq) (one *en
 		err = dao.Plan.Ctx(ctx).WhereIn(dao.Plan.Columns().Id, req.OnetimeAddonIds).Scan(&allAddonList)
 		for _, addonPlan := range allAddonList {
 			utility.Assert(addonPlan.Type == consts.PlanTypeOnetimeAddon, fmt.Sprintf("plan not addon onetime type, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("add plan not published status, id:%d", addonPlan.Id))
-			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("add plan currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Status == consts.PlanStatusActive, fmt.Sprintf("addon not published status, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.Currency == one.Currency, fmt.Sprintf("addon currency not match plan's currency, id:%d", addonPlan.Id))
+			utility.Assert(addonPlan.ProductId == one.ProductId, fmt.Sprintf("addon product not match plan's product, id:%d", addonPlan.Id))
 		}
 	}
 
@@ -651,8 +665,8 @@ func PlanAddonsBinding(ctx context.Context, req *plan.AddonsBindingReq) (one *en
 		oneTimeAddonIdsList = utility.RemoveInt64Arrays(oneTimeAddonIdsList, req.OnetimeAddonIds)
 	}
 
-	utility.Assert(len(addonIdsList) <= 10, "addon too much, should <= 10")
-	utility.Assert(len(oneTimeAddonIdsList) <= 10, "addon too much, should <= 10")
+	utility.Assert(len(addonIdsList) <= 10, "binding addon too much, should <= 10")
+	utility.Assert(len(oneTimeAddonIdsList) <= 10, "binding addon too much, should <= 10")
 
 	one.BindingAddonIds = utility.IntListToString(addonIdsList)
 	one.BindingOnetimeAddonIds = utility.IntListToString(oneTimeAddonIdsList)

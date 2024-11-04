@@ -112,7 +112,7 @@ func (c *Contact) appendCompanyContactToDoc(doc *Document, y float64) float64 {
 	if doc.IsRefund {
 		return c.appendContactTODoc(x, y, true, doc, "From:")
 	} else {
-		return c.appendContactTODoc(x, y, true, doc, "Issued By:")
+		return c.appendContactTODoc(x, y, true, doc, "Issued by:")
 	}
 
 }
@@ -121,6 +121,6 @@ func (c *Contact) appendCustomerContactToDoc(doc *Document, y float64) float64 {
 	if doc.IsRefund {
 		return c.appendContactTODoc(130, y, true, doc, "To:")
 	} else {
-		return c.appendContactTODoc(130, y, true, doc, "Invoice To:")
+		return c.appendContactTODoc(130, y, true, doc, "Invoice to:")
 	}
 }

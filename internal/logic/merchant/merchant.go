@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/os/gtime"
 	"unibee/internal/cmd/config"
 	dao "unibee/internal/dao/default"
+	"unibee/internal/logic/member"
 	"unibee/internal/logic/operation_log"
 	"unibee/internal/logic/platform"
 	entity "unibee/internal/model/entity/default"
@@ -124,6 +125,7 @@ func CreateMerchant(ctx context.Context, req *CreateMerchantInternalReq) (*entit
 	utility.Assert(newOne != nil, "Server Error")
 	err = SetupForCloudMode(ctx, merchant.Id)
 	ReloadAllMerchantsCacheForSDKAuthBackground()
+	member.ReloadMemberCacheForSdkAuthBackground(newOne.Id)
 	return merchant, newOne, err
 }
 

@@ -64,14 +64,14 @@ func (doc *Document) encodeString(str string) string {
 // encodeString encodes the string using doc.Options.UnicodeTranslateFunc
 func (doc *Document) encodeFitRefundString(str string) string {
 	if doc.IsRefund {
-		str = strings.ReplaceAll(str, "Invoice", "Credit Note")
+		str = strings.ReplaceAll(str, "Invoice", "Credit note")
 	}
 	return doc.Options.UnicodeTranslateFunc(str)
 }
 
 func (doc *Document) FitRefundString(str string) string {
 	if doc.IsRefund {
-		str = strings.ReplaceAll(str, "Invoice", "Credit Note")
+		str = strings.ReplaceAll(str, "Invoice", "Credit note")
 	}
 	return str
 }

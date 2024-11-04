@@ -19,6 +19,7 @@ type SubscriptionConfig struct {
 	TryAutomaticPaymentBeforePeriodEnd int64  `json:"tryAutomaticPaymentBeforePeriodEnd" dc:"TryAutomaticPaymentBeforePeriodEnd, default 30 min"`
 	GatewayVATRule                     string `json:"gatewayVATRule" dc:""`
 	ShowZeroInvoice                    bool   `json:"showZeroInvoice" dc:"ShowZeroInvoice, show zero invoice or not, default no"`
+	FiatExchangeApiKey                 string `json:"fiatExchangeApiKey" dc:""`
 }
 
 type Subscription struct {

@@ -6,11 +6,15 @@ import (
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
 	"strconv"
 	"unibee/api/bean"
 	"unibee/api/bean/detail"
+	redismq2 "unibee/internal/cmd/redismq"
 	dao "unibee/internal/dao/default"
+	metric2 "unibee/internal/logic/metric"
 	"unibee/internal/query"
+	"unibee/utility"
 )
 
 func UpdateSubscriptionAddonPurchasePaymentId(ctx context.Context, id uint64, paymentId string) error {
@@ -109,5 +113,15 @@ func HandleOnetimeAddonPaymentSuccess(ctx context.Context, id uint64) (bool, err
 	if err != nil {
 		return false, err
 	}
+	_, _ = redismq.Send(&redismq.Message{
+		Topic: redismq2.TopicUserMetricUpdate.Topic,
+		Tag:   redismq2.TopicUserMetricUpdate.Tag,
+		Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+			UserId:         one.UserId,
+			SubscriptionId: one.SubscriptionId,
+			Description:    "SubscriptionOneTimeAddonPaymentSuccess",
+		}),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	return true, nil
 }

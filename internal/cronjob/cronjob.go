@@ -51,6 +51,9 @@ func StartCronJobs() {
 	_, err = gcron.Add(ctx, "@every 10m", func(ctx context.Context) {
 		sub.TaskForSubscriptionTrackAfterCancelledOrExpired(ctx, other10MinTask)
 		sub.TaskForSubscriptionInitFailed(ctx, other10MinTask)
+		if !config.GetConfigInstance().IsProd() {
+			invoice.TaskForCompensateSubUpDownInvoices(ctx)
+		}
 	}, other10MinTask)
 	if err != nil {
 		g.Log().Errorf(ctx, "StartCronJobs Name:%s Err:%s\n", other10MinTask, err.Error())
@@ -62,9 +65,6 @@ func StartCronJobs() {
 		gateway_log.TaskForDeleteChannelLogs(ctx)
 		gateway_log.TaskForDeleteWebhookMessage(ctx)
 		sub.TaskForUserSubCompensate(ctx, hourTask)
-		if !config.GetConfigInstance().IsProd() {
-			invoice.TaskForCompensateSubUpDownInvoices(ctx)
-		}
 	}, hourTask)
 	if err != nil {
 		g.Log().Errorf(ctx, "StartCronJobs Name:%s Err:%s\n", hourTask, err.Error())

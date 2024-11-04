@@ -18,9 +18,11 @@ type UserMetricRes struct {
 
 type UserMetric struct {
 	IsPaid                  bool                           `json:"isPaid" dc:"IsPaid"`
+	Product                 *bean.Product                  `json:"product" dc:"Product"`
 	User                    *bean.UserAccount              `json:"user" dc:"user"`
 	Subscription            *bean.Subscription             `json:"subscription" dc:"Subscription"`
 	Plan                    *bean.Plan                     `json:"plan" dc:"Plan"`
 	Addons                  []*bean.PlanAddonDetail        `json:"addons" dc:"Addon"`
 	UserMerchantMetricStats []*bean.UserMerchantMetricStat `json:"userMerchantMetricStats" dc:"UserMerchantMetricStats"`
+	Description             string                         `json:"description" dc:"description"`
 }

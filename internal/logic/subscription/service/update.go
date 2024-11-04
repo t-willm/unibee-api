@@ -25,6 +25,7 @@ import (
 	service3 "unibee/internal/logic/invoice/service"
 	"unibee/internal/logic/operation_log"
 	"unibee/internal/logic/payment/service"
+	plan2 "unibee/internal/logic/plan"
 	subscription2 "unibee/internal/logic/subscription"
 	addon2 "unibee/internal/logic/subscription/addon"
 	"unibee/internal/logic/subscription/config"
@@ -36,16 +37,23 @@ import (
 	"unibee/utility"
 )
 
+func GetPlanIntervalLength(plan *entity.Plan) int {
+	return plan2.PlanIntervalLength[plan.IntervalUnit] * plan.IntervalCount
+}
+
 func isUpgradeForSubscription(ctx context.Context, sub *entity.Subscription, plan *entity.Plan, quantity int64, addonParams []*bean.PlanAddonParam) (isUpgrade bool, changed bool) {
 	//default logical，Effect Immediately for upgrade, effect at period end for downgrade
-	//situation 1，NewPlan Unit Amount >  OldPlan Unit Amount，is upgrade，ignore Quantity and addon change
-	//situation 2，NewPlan Unit Amount <  OldPlan Unit Amount，is downgrade，ignore Quantity and addon change
-	//situation 3，NewPlan Total Amount >  OldPlan Total Amount，is upgrade
-	//situation 4，NewPlan Total Amount <  OldPlan Total Amount，is downgrade
-	//situation 5，NewPlan Total Amount =  OldPlan Total Amount，see Addon changes，if new addon appended or addon quantity changed, is upgrade，otherwise downgrade
+	//situation 1，NewPlan IntervalLength >  OldPlan IntervalLength，is upgrade，ignore Amount, Quantity and addon change
+	//situation 2，NewPlan Unit Amount >  OldPlan Unit Amount，is upgrade，ignore Quantity and addon change
+	//situation 3，NewPlan Unit Amount <  OldPlan Unit Amount，is downgrade，ignore Quantity and addon change
+	//situation 4，NewPlan Total Amount >  OldPlan Total Amount，is upgrade
+	//situation 5，NewPlan Total Amount <  OldPlan Total Amount，is downgrade
+	//situation 6，NewPlan Total Amount =  OldPlan Total Amount，see Addon changes，if new addon appended or addon quantity changed, is upgrade，otherwise downgrade
 	oldPlan := query.GetPlanById(ctx, sub.PlanId)
-	utility.Assert(oldPlan != nil, "oldPlan not found")
-	if plan.IntervalUnit != oldPlan.IntervalUnit || plan.IntervalCount != oldPlan.IntervalCount {
+	utility.Assert(oldPlan != nil, "old plan not found")
+	utility.Assert(oldPlan.ProductId == plan.ProductId, "new plan's product must same with subscription")
+	//if plan.IntervalUnit != oldPlan.IntervalUnit || plan.IntervalCount != oldPlan.IntervalCount {
+	if GetPlanIntervalLength(plan) > GetPlanIntervalLength(oldPlan) {
 		isUpgrade = true
 		changed = true
 	} else if plan.Amount > oldPlan.Amount || plan.Amount*quantity > oldPlan.Amount*sub.Quantity {
@@ -57,7 +65,7 @@ func isUpgradeForSubscription(ctx context.Context, sub *entity.Subscription, pla
 	} else {
 		var oldAddonParams []*bean.PlanAddonParam
 		err := utility.UnmarshalFromJsonString(sub.AddonData, &oldAddonParams)
-		utility.Assert(err == nil, fmt.Sprintf("UnmarshalFromJsonString internal err:%v", err))
+		utility.Assert(err == nil, fmt.Sprintf("UnmarshalFromJsonString err:%v", err))
 		var oldAddonMap = make(map[uint64]int64)
 		for _, oldAddon := range oldAddonParams {
 			if _, ok := oldAddonMap[oldAddon.AddonPlanId]; ok {
@@ -228,9 +236,9 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 		}
 	}
 
-	if !effectImmediate {
-		utility.Assert(sub.CancelAtPeriodEnd == 0, "subscription will cancel at period end, should resume subscription first")
-	}
+	//if !effectImmediate {
+	//	utility.Assert(sub.CancelAtPeriodEnd == 0, "subscription will cancel at period end, should resume subscription first")
+	//}
 
 	var currentInvoice *bean.Invoice
 	var nextPeriodInvoice *bean.Invoice

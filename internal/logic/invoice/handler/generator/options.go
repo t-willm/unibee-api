@@ -16,22 +16,22 @@ type Options struct {
 	TextTypeQuotation    string `default:"QUOTATION" json:"text_type_quotation,omitempty"`
 	TextTypeDeliveryNote string `default:"DELIVERY NOTE" json:"text_type_delivery_note,omitempty"`
 
-	TextInvoiceIdTitle           string `default:"Invoice Id" json:"invoice_id_title,omitempty"`
-	TextInvoiceNumberTitle       string `default:"Invoice Number" json:"invoice_number_title,omitempty"`
-	TextOriginInvoiceNumberTitle string `default:"Original Invoice Number" json:"text_origin_number_title,omitempty"`
-	TextInvoiceDateTitle         string `default:"Invoice Date" json:"text_data_title,omitempty"`
-	TextInvoicePaidDateTitle     string `default:"Invoice Paid Date" json:"text_paid_date_title,omitempty"`
+	TextInvoiceIdTitle           string `default:"Invoice id" json:"invoice_id_title,omitempty"`
+	TextInvoiceNumberTitle       string `default:"Invoice number" json:"invoice_number_title,omitempty"`
+	TextOriginInvoiceNumberTitle string `default:"Original invoice number" json:"text_origin_number_title,omitempty"`
+	TextInvoiceDateTitle         string `default:"Invoice date" json:"text_data_title,omitempty"`
+	TextInvoicePaidDateTitle     string `default:"Invoice payment date" json:"text_paid_date_title,omitempty"`
 	TextPaymentTermTitle         string `default:"Payment term" json:"text_payment_term_title,omitempty"`
 
 	TextItemsNameTitle     string `default:"Description" json:"text_items_name_title,omitempty"`
-	TextItemsUnitCostTitle string `default:"Unit Price" json:"text_items_unit_cost_title,omitempty"`
+	TextItemsUnitCostTitle string `default:"Unit price" json:"text_items_unit_cost_title,omitempty"`
 	TextItemsQuantityTitle string `default:"Quantity" json:"text_items_quantity_title,omitempty"`
 	TextItemsTotalHTTitle  string `default:"Total no tax" json:"text_items_total_ht_title,omitempty"`
 	TextItemsTaxTitle      string `default:"VAT" json:"text_items_tax_title,omitempty"`
 	TextItemsDiscountTitle string `default:"Discount" json:"text_items_discount_title,omitempty"`
 	TextItemsTotalTTCTitle string `default:"Total" json:"text_items_total_ttc_title,omitempty"`
 
-	TextSubTotal        string `default:"SUB TOTAL" json:"text_sub_total,omitempty"`
+	TextSubTotal        string `default:"SUBTOTAL" json:"text_sub_total,omitempty"`
 	TextTotalDiscounted string `default:"TOTAL DISCOUNTED" json:"text_total_discounted,omitempty"`
 	TextTotalTax        string `default:"VAT" json:"text_total_tax,omitempty"`
 	TextTotalWithTax    string `default:"TOTAL" json:"text_total_with_tax,omitempty"`

@@ -3,20 +3,19 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/frame/g"
+	"github.com/gogf/gf/v2/os/gtime"
 	"strconv"
 	"unibee/api/bean/detail"
 	"unibee/internal/cmd/i18n"
 	"unibee/internal/consts"
 	_interface "unibee/internal/interface"
+	"unibee/internal/logic/operation_log"
 	"unibee/internal/logic/user/sub_update"
 	"unibee/internal/logic/vat_gateway"
 	"unibee/internal/query"
 	"unibee/time"
 	"unibee/utility"
-	"unibee/utility/unibee"
-
-	"github.com/gogf/gf/v2/frame/g"
-	"github.com/gogf/gf/v2/os/gtime"
 
 	"unibee/api/user/profile"
 	dao "unibee/internal/dao/default"
@@ -85,8 +84,6 @@ func (c *ControllerProfile) Update(ctx context.Context, req *profile.UpdateReq) 
 
 	if req.Type != nil {
 		utility.Assert(*req.Type == 1 || *req.Type == 2, "invalid Type, 1-Individual|2-organization")
-	} else {
-		req.Type = unibee.Int64(1)
 	}
 	_, err = dao.UserAccount.Ctx(ctx).Data(g.Map{
 		dao.UserAccount.Columns().Type:               req.Type,
@@ -113,6 +110,16 @@ func (c *ControllerProfile) Update(ctx context.Context, req *profile.UpdateReq) 
 	if err != nil {
 		return nil, err
 	}
+	operation_log.AppendOptLog(ctx, &operation_log.OptLogRequest{
+		MerchantId:     one.MerchantId,
+		Target:         fmt.Sprintf("User(%v)", one.Id),
+		Content:        "Update",
+		UserId:         one.Id,
+		SubscriptionId: "",
+		InvoiceId:      "",
+		PlanId:         0,
+		DiscountCode:   "",
+	}, err)
 	one = query.GetUserAccountById(ctx, _interface.Context().Get(ctx).User.Id)
 	return &profile.UpdateRes{User: detail.ConvertUserAccountToDetail(ctx, one)}, nil
 }

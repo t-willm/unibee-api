@@ -17,7 +17,9 @@ import (
 	"unibee/internal/controller/link"
 	dao "unibee/internal/dao/default"
 	"unibee/internal/logic/currency"
+	"unibee/internal/logic/discount"
 	"unibee/internal/logic/email"
+	"unibee/internal/logic/fiat_exchange"
 	"unibee/internal/logic/gateway/api"
 	"unibee/internal/logic/gateway/gateway_bean"
 	"unibee/internal/logic/merchant_config"
@@ -138,6 +140,19 @@ func UpdateInvoiceFromPayment(ctx context.Context, payment *entity.Payment) (*en
 	utility.Assert(payment != nil, "payment data is nil")
 	utility.Assert(len(payment.PaymentId) > 0, "paymentId is nil")
 	one := query.GetInvoiceByPaymentId(ctx, payment.PaymentId)
+	if one == nil && payment.Status == consts.PaymentSuccess {
+		// improve, switch invoice to success payment
+		one = query.GetInvoiceByInvoiceId(ctx, payment.InvoiceId)
+		if one != nil {
+			if one.Status != consts.InvoiceStatusPaid {
+				_, _ = dao.Invoice.Ctx(ctx).Data(g.Map{
+					dao.Invoice.Columns().PaymentId: payment.PaymentId,
+				}).Where(dao.Invoice.Columns().Id, one.Id).OmitNil().Update()
+			} else {
+				return nil, gerror.New("invoice already success by other payment, invoiceId:" + one.InvoiceId + "paymentId:" + one.PaymentId + " subId:" + one.SubscriptionId)
+			}
+		}
+	}
 	if one == nil {
 		return nil, gerror.New("invoice not found, paymentId:" + payment.PaymentId + " subId:" + payment.SubscriptionId)
 	}
@@ -159,10 +174,11 @@ func UpdateInvoiceFromPayment(ctx context.Context, payment *entity.Payment) (*en
 				g.Log().Infof(ctx, "UpdateInvoiceFromPayment_Reverse invoiceId:%s paymentId:%s", one.InvoiceId, payment.PaymentId)
 				if utility.TryLock(ctx, fmt.Sprintf("UpdateInvoiceFromPayment_%s", one.InvoiceId), 60) {
 					_, _ = redismq.Send(&redismq.Message{
-						Topic:      redismq2.TopicInvoicePaid.Topic,
-						Tag:        redismq2.TopicInvoicePaid.Tag,
-						Body:       one.InvoiceId,
-						CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+						Topic:                     redismq2.TopicInvoicePaid.Topic,
+						Tag:                       redismq2.TopicInvoicePaid.Tag,
+						ConsumerDelayMilliSeconds: 500,
+						Body:                      one.InvoiceId,
+						CustomData:                map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 					})
 				}
 				return one, nil
@@ -196,10 +212,11 @@ func UpdateInvoiceFromPayment(ctx context.Context, payment *entity.Payment) (*en
 		if utility.TryLock(ctx, fmt.Sprintf("UpdateInvoiceFromPayment_%s", one.InvoiceId), 60) {
 			if status == consts.InvoiceStatusPaid {
 				_, _ = redismq.Send(&redismq.Message{
-					Topic:      redismq2.TopicInvoicePaid.Topic,
-					Tag:        redismq2.TopicInvoicePaid.Tag,
-					Body:       one.InvoiceId,
-					CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+					Topic:                     redismq2.TopicInvoicePaid.Topic,
+					Tag:                       redismq2.TopicInvoicePaid.Tag,
+					ConsumerDelayMilliSeconds: 500,
+					Body:                      one.InvoiceId,
+					CustomData:                map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 				})
 			} else if status == consts.InvoiceStatusCancelled {
 				g.Log().Infof(ctx, "CancelProcessingInvoice invoiceId:%s reason:%s", one.InvoiceId, "UpdateInvoiceFromPayment")
@@ -343,10 +360,11 @@ func UpdateInvoiceFromPaymentRefund(ctx context.Context, refund *entity.Refund) 
 		if utility.TryLock(ctx, fmt.Sprintf("UpdateInvoiceFromPayment_%s", one.InvoiceId), 60) {
 			if status == consts.InvoiceStatusPaid {
 				_, _ = redismq.Send(&redismq.Message{
-					Topic:      redismq2.TopicInvoicePaid.Topic,
-					Tag:        redismq2.TopicInvoicePaid.Tag,
-					Body:       one.InvoiceId,
-					CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+					Topic:                     redismq2.TopicInvoicePaid.Topic,
+					Tag:                       redismq2.TopicInvoicePaid.Tag,
+					ConsumerDelayMilliSeconds: 500,
+					Body:                      one.InvoiceId,
+					CustomData:                map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 				})
 			} else if status == consts.InvoiceStatusCancelled {
 				g.Log().Infof(ctx, "CancelProcessingInvoice invoiceId:%s reason:%s", one.InvoiceId, "UpdateInvoiceFromPaymentRefund")
@@ -379,6 +397,22 @@ func MarkInvoiceAsPaidForZeroPayment(ctx context.Context, invoiceId string) (*en
 	if one.TotalAmount != 0 {
 		return nil, gerror.New("invoice totalAmount not zero, InvoiceId:" + invoiceId)
 	}
+	if len(one.DiscountCode) > 0 {
+		_, err := discount.UserDiscountApply(ctx, &discount.UserDiscountApplyReq{
+			MerchantId:     one.MerchantId,
+			UserId:         one.UserId,
+			DiscountCode:   one.DiscountCode,
+			SubscriptionId: one.SubscriptionId,
+			PaymentId:      "",
+			InvoiceId:      one.InvoiceId,
+			ApplyAmount:    one.DiscountAmount,
+			Currency:       one.Currency,
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	_, err := dao.Invoice.Ctx(ctx).Data(g.Map{
 		dao.Invoice.Columns().Status:    consts.InvoiceStatusPaid,
 		dao.Invoice.Columns().GmtModify: gtime.Now(),
@@ -386,16 +420,18 @@ func MarkInvoiceAsPaidForZeroPayment(ctx context.Context, invoiceId string) (*en
 	if err != nil {
 		return nil, err
 	}
+
 	_ = InvoicePdfGenerateAndEmailSendBackground(one.InvoiceId, true, false)
 	one.Status = consts.InvoiceStatusPaid
 	go func() {
 		time.Sleep(1 * time.Second)
 		if utility.TryLock(ctx, fmt.Sprintf("MarkInvoiceAsPaidForZeroPayment_%s", one.InvoiceId), 60) {
 			_, _ = redismq.Send(&redismq.Message{
-				Topic:      redismq2.TopicInvoicePaid.Topic,
-				Tag:        redismq2.TopicInvoicePaid.Tag,
-				Body:       one.InvoiceId,
-				CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+				Topic:                     redismq2.TopicInvoicePaid.Topic,
+				Tag:                       redismq2.TopicInvoicePaid.Tag,
+				ConsumerDelayMilliSeconds: 500,
+				Body:                      one.InvoiceId,
+				CustomData:                map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
 			})
 		}
 	}()
@@ -449,7 +485,7 @@ func ReconvertCryptoDataForInvoice(ctx context.Context, invoiceId string) error 
 	user := query.GetUserAccountById(ctx, uint64(one.UserId))
 	utility.Assert(user != nil, "user not found")
 
-	exchangeApiKeyConfig := merchant_config.GetMerchantConfig(ctx, user.MerchantId, config.FiatExchangeApiKey)
+	exchangeApiKeyConfig := merchant_config.GetMerchantConfig(ctx, user.MerchantId, fiat_exchange.FiatExchangeApiKey)
 	var cryptoCurrency string
 	var cryptoAmount int64 = -1
 	if exchangeApiKeyConfig != nil && len(exchangeApiKeyConfig.ConfigValue) > 0 {

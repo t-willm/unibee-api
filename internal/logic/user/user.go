@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
 	"strings"
 	"unibee/internal/cmd/i18n"
+	redismq2 "unibee/internal/cmd/redismq"
 	dao "unibee/internal/dao/default"
 	_interface "unibee/internal/interface"
 	"unibee/internal/logic/analysis/segment"
 	"unibee/internal/logic/jwt"
+	metric2 "unibee/internal/logic/metric"
 	"unibee/internal/logic/operation_log"
 	"unibee/internal/logic/subscription/service"
 	"unibee/internal/logic/vat_gateway"
@@ -20,6 +23,7 @@ import (
 )
 
 func ChangeUserEmail(ctx context.Context, userId uint64, newEmail string) {
+	newEmail = strings.TrimSpace(newEmail)
 	one := query.GetUserAccountById(ctx, userId)
 	utility.Assert(one != nil, "user not found")
 	if one.Email == newEmail {
@@ -32,9 +36,29 @@ func ChangeUserEmail(ctx context.Context, userId uint64, newEmail string) {
 		dao.UserAccount.Columns().GmtModify: gtime.Now(),
 	}).Where(dao.UserAccount.Columns().Id, one.Id).OmitNil().Update()
 	utility.AssertError(err, "update user email err")
+	if len(one.SubscriptionId) > 0 {
+		// change user's sub gateway immediately
+		_, _ = redismq.Send(&redismq.Message{
+			Topic: redismq2.TopicUserMetricUpdate.Topic,
+			Tag:   redismq2.TopicUserMetricUpdate.Tag,
+			Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+				UserId:         one.Id,
+				SubscriptionId: one.SubscriptionId,
+				Description:    "ChangeUserEmail",
+			}),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicUserAccountUpdate.Topic,
+			Tag:        redismq2.TopicUserAccountUpdate.Tag,
+			Body:       fmt.Sprintf("%d", one.Id),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
+	}
 }
 
 func ChangeUserPasswordWithOutOldVerify(ctx context.Context, merchantId uint64, email string, newPassword string) {
+	email = strings.TrimSpace(email)
 	one := query.GetUserAccountByEmail(ctx, merchantId, email)
 	utility.Assert(one != nil, "user not found")
 	_, err := dao.UserAccount.Ctx(ctx).Data(g.Map{
@@ -55,6 +79,7 @@ func ChangeUserPasswordWithOutOldVerify(ctx context.Context, merchantId uint64, 
 }
 
 func ChangeUserPassword(ctx context.Context, merchantId uint64, email string, oldPassword string, newPassword string) {
+	email = strings.TrimSpace(email)
 	one := query.GetUserAccountByEmail(ctx, merchantId, email)
 	utility.Assert(one != nil, "user not found")
 	utility.Assert(utility.ComparePasswords(one.Password, oldPassword), "password not match")
@@ -101,6 +126,25 @@ func FrozenUser(ctx context.Context, userId int64) {
 			utility.AssertError(err, "server error")
 		}
 	}
+	if len(one.SubscriptionId) > 0 {
+		// change user's sub gateway immediately
+		_, _ = redismq.Send(&redismq.Message{
+			Topic: redismq2.TopicUserMetricUpdate.Topic,
+			Tag:   redismq2.TopicUserMetricUpdate.Tag,
+			Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+				UserId:         one.Id,
+				SubscriptionId: one.SubscriptionId,
+				Description:    "SuspendUser",
+			}),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicUserAccountUpdate.Topic,
+			Tag:        redismq2.TopicUserAccountUpdate.Tag,
+			Body:       fmt.Sprintf("%d", one.Id),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
+	}
 }
 
 func ReleaseUser(ctx context.Context, userId int64) {
@@ -121,9 +165,29 @@ func ReleaseUser(ctx context.Context, userId int64) {
 		DiscountCode:   "",
 	}, err)
 	utility.AssertError(err, "server error")
+	if len(one.SubscriptionId) > 0 {
+		// change user's sub gateway immediately
+		_, _ = redismq.Send(&redismq.Message{
+			Topic: redismq2.TopicUserMetricUpdate.Topic,
+			Tag:   redismq2.TopicUserMetricUpdate.Tag,
+			Body: utility.MarshalToJsonString(&metric2.UserMetricUpdateMessage{
+				UserId:         one.Id,
+				SubscriptionId: one.SubscriptionId,
+				Description:    "Resume",
+			}),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicUserAccountUpdate.Topic,
+			Tag:        redismq2.TopicUserAccountUpdate.Tag,
+			Body:       fmt.Sprintf("%d", one.Id),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
+	}
 }
 
 func PasswordLogin(ctx context.Context, merchantId uint64, email string, password string) (one *entity.UserAccount, token string) {
+	email = strings.TrimSpace(email)
 	one = query.GetUserAccountByEmail(ctx, merchantId, email)
 	utility.Assert(one != nil, "Email Not Found")
 	utility.Assert(one.Status == 0, "Account Status Abnormal")
@@ -139,6 +203,7 @@ func PasswordLogin(ctx context.Context, merchantId uint64, email string, passwor
 func CreateUser(ctx context.Context, req *NewUserInternalReq) (one *entity.UserAccount, err error) {
 	utility.Assert(req.MerchantId > 0, "merchantId invalid")
 	utility.Assert(req != nil, "Server Error")
+	req.Email = strings.TrimSpace(req.Email)
 	if len(req.ExternalUserId) > 0 {
 		one = query.GetUserAccountByExternalUserId(ctx, req.MerchantId, req.ExternalUserId)
 	}
@@ -187,7 +252,6 @@ func CreateUser(ctx context.Context, req *NewUserInternalReq) (one *entity.UserA
 		RegistrationNumber: req.RegistrationNumber,
 		CreateTime:         gtime.Now().Timestamp(),
 	}
-	// todo mark vat check, countryCode check
 	result, err := dao.UserAccount.Ctx(ctx).Data(one).OmitNil().Insert(one)
 	utility.AssertError(err, "Server Error")
 	id, err := result.LastInsertId()
@@ -203,7 +267,12 @@ func CreateUser(ctx context.Context, req *NewUserInternalReq) (one *entity.UserA
 		PlanId:         0,
 		DiscountCode:   "",
 	}, err)
-	// move to redis mq
+	_, _ = redismq.Send(&redismq.Message{
+		Topic:      redismq2.TopicUserAccountCreate.Topic,
+		Tag:        redismq2.TopicUserAccountCreate.Tag,
+		Body:       fmt.Sprintf("%d", one.Id),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 	segment.RegisterSegmentUserBackground(ctx, one.MerchantId, one)
 	return one, nil
 }
@@ -211,6 +280,7 @@ func CreateUser(ctx context.Context, req *NewUserInternalReq) (one *entity.UserA
 func QueryOrCreateUser(ctx context.Context, req *NewUserInternalReq) (one *entity.UserAccount, err error) {
 	utility.Assert(req.MerchantId > 0, "merchantId invalid")
 	utility.Assert(req != nil, "Server Error")
+	req.Email = strings.TrimSpace(req.Email)
 	if len(req.ExternalUserId) > 0 {
 		one = query.GetUserAccountByExternalUserId(ctx, req.MerchantId, req.ExternalUserId)
 	}
@@ -272,11 +342,19 @@ func QueryOrCreateUser(ctx context.Context, req *NewUserInternalReq) (one *entit
 			dao.UserAccount.Columns().Type:               req.Type,
 			dao.UserAccount.Columns().ZipCode:            req.ZipCode,
 			dao.UserAccount.Columns().Language:           req.Language,
+			dao.UserAccount.Columns().Address:            req.Address,
+			dao.UserAccount.Columns().CompanyName:        req.CompanyName,
 			dao.UserAccount.Columns().RegistrationNumber: req.RegistrationNumber,
 			dao.UserAccount.Columns().GmtModify:          gtime.Now(),
 		}).Where(dao.UserAccount.Columns().Id, one.Id).OmitEmpty().Update()
 		utility.AssertError(err, "Server Error")
 		one = query.GetUserAccountById(ctx, one.Id)
+		_, _ = redismq.Send(&redismq.Message{
+			Topic:      redismq2.TopicUserAccountUpdate.Topic,
+			Tag:        redismq2.TopicUserAccountUpdate.Tag,
+			Body:       fmt.Sprintf("%d", one.Id),
+			CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+		})
 	}
 	return
 }

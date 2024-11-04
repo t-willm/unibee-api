@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/gogf/gf/v2/os/glog"
 	"os"
+	"strings"
 )
 
 func ReadBuildVersionInfo(ctx context.Context) string {
@@ -11,5 +12,5 @@ func ReadBuildVersionInfo(ctx context.Context) string {
 	if err != nil {
 		glog.Errorf(ctx, "ReadBuildVersionInfo error:%s", err.Error())
 	}
-	return string(buildInfo)
+	return strings.TrimSpace(string(buildInfo))
 }

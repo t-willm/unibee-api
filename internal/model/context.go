@@ -33,20 +33,21 @@ type OpenApiConfig struct {
 }
 
 type Context struct {
-	Session        *ghttp.Session
-	MerchantId     uint64
-	User           *ContextUser
-	MerchantMember *ContextMerchantMember
-	RequestId      string
-	Data           g.Map
-	OpenApiConfig  *OpenApiConfig
-	OpenApiKey     string
-	IsOpenApiCall  bool
-	Language       string
-	UserAgent      string
-	Authorization  string
-	TokenString    string
-	Token          *TokenClaims
+	Session           *ghttp.Session
+	MerchantId        uint64
+	User              *ContextUser
+	MerchantMember    *ContextMerchantMember
+	RequestId         string
+	Data              g.Map
+	OpenApiConfig     *OpenApiConfig
+	OpenApiKey        string
+	IsOpenApiCall     bool
+	IsAdminPortalCall bool
+	Language          string
+	UserAgent         string
+	Authorization     string
+	TokenString       string
+	Token             *TokenClaims
 }
 
 type ContextUser struct {

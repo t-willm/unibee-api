@@ -243,15 +243,11 @@ func ValidateVatNumberByDefaultGateway(ctx context.Context, merchantId uint64, u
 	if err != nil {
 		return nil, gerror.Newf(`ValidateVatNumberByDefaultGateway record insert failure %s`, err)
 	}
-	//if result.Valid && userId > 0 {
-	//	user.UpdateUserVatNumber(ctx, userId, vatNumber)
-	//}
 	return result, nil
 }
 
 func MerchantCountryRateList(ctx context.Context, merchantId uint64) ([]*bean.VatCountryRate, error) {
 	gateway := GetDefaultVatGateway(ctx, merchantId)
-	//utility.Assert(gateway != nil, "Default Vat Gateway Need Setup")
 	if gateway == nil {
 		return make([]*bean.VatCountryRate, 0), gerror.New("Default Vat Gateway Need Setup")
 	}

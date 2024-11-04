@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"unibee/api/bean"
+	"unibee/internal/logic/discount/quantity"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
 )
@@ -29,6 +30,8 @@ type MerchantDiscountCodeDetail struct {
 	PlanIds            []int64                `json:"planIds"  description:"Ids of plan which discount code can effect, default effect all plans if not set" `
 	Plans              []*bean.Plan           `json:"plans"         description:"plans which discount code can effect, default effect all plans if not set"` // create utc time
 	Metadata           map[string]interface{} `json:"metadata"           description:""`
+	Quantity           int64                  `json:"quantity"           description:"quantity of code, 0-no limit"`
+	QuantityUsed       int64                  `json:"quantityUsed"           description:"quantity used count of code"`
 }
 
 func ConvertMerchantDiscountCodeDetail(ctx context.Context, one *entity.MerchantDiscountCode) *MerchantDiscountCodeDetail {
@@ -74,6 +77,8 @@ func ConvertMerchantDiscountCodeDetail(ctx context.Context, one *entity.Merchant
 		PlanIds:            planIds,
 		Plans:              bean.SimplifyPlanList(query.GetPlansByIds(ctx, planIds)),
 		Metadata:           metadata,
+		Quantity:           one.Quantity,
+		QuantityUsed:       int64(quantity.GetDiscountQuantityUsedCount(ctx, one.Id)),
 	}
 }
 

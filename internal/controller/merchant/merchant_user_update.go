@@ -3,11 +3,14 @@ package merchant
 import (
 	"context"
 	"fmt"
+	"github.com/gogf/gf/v2/encoding/gjson"
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gtime"
+	redismq "github.com/jackyang-hk/go-redismq"
 	"unibee/api/bean/detail"
 	"unibee/api/merchant/user"
 	"unibee/internal/cmd/i18n"
+	redismq2 "unibee/internal/cmd/redismq"
 	dao "unibee/internal/dao/default"
 	_interface "unibee/internal/interface"
 	"unibee/internal/logic/operation_log"
@@ -78,8 +81,6 @@ func (c *ControllerUser) Update(ctx context.Context, req *user.UpdateReq) (res *
 
 	if req.Type != nil {
 		utility.Assert(*req.Type == 1 || *req.Type == 2, "invalid Type, 1-Individual|2-organization")
-	} else {
-		req.Type = unibee.Int64(1)
 	}
 	_, err = dao.UserAccount.Ctx(ctx).Data(g.Map{
 		dao.UserAccount.Columns().Type:               req.Type,
@@ -116,11 +117,24 @@ func (c *ControllerUser) Update(ctx context.Context, req *user.UpdateReq) (res *
 		return nil, err
 	}
 	if req.Metadata != nil {
+		var metadata = make(map[string]interface{})
+		if len(one.MetaData) > 0 {
+			_ = gjson.Unmarshal([]byte(one.MetaData), &metadata)
+		}
+		for k, v := range *req.Metadata {
+			metadata[k] = v
+		}
 		_, _ = dao.UserAccount.Ctx(ctx).Data(g.Map{
-			dao.UserAccount.Columns().MetaData: utility.MarshalToJsonString(req.Metadata),
+			dao.UserAccount.Columns().MetaData: utility.MarshalToJsonString(metadata),
 		}).Where(dao.UserAccount.Columns().Id, req.UserId).OmitNil().Update()
 	}
 	one = query.GetUserAccountById(ctx, *req.UserId)
+	_, _ = redismq.Send(&redismq.Message{
+		Topic:      redismq2.TopicUserAccountUpdate.Topic,
+		Tag:        redismq2.TopicUserAccountUpdate.Tag,
+		Body:       fmt.Sprintf("%d", one.Id),
+		CustomData: map[string]interface{}{"CreateFrom": utility.ReflectCurrentFunctionName()},
+	})
 
 	return &user.UpdateRes{User: detail.ConvertUserAccountToDetail(ctx, one)}, nil
 }

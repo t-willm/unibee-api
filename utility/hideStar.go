@@ -7,7 +7,7 @@ import (
 
 func HideStar(str string) (result string) {
 	if str == "" {
-		return "***"
+		return ""
 	}
 	if strings.Contains(str, "@") {
 		res := strings.Split(str, "@")

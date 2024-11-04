@@ -26,6 +26,7 @@ func SetupGateway(ctx context.Context, merchantId uint64, gatewayName string, ga
 	utility.Assert(one == nil, "exist same gateway")
 	if config.GetConfigInstance().IsProd() {
 		err = dao.MerchantGateway.Ctx(ctx).
+			Where(dao.MerchantGateway.Columns().MerchantId, merchantId).
 			Where(dao.MerchantGateway.Columns().GatewayName, gatewayName).
 			Where(dao.MerchantGateway.Columns().GatewayKey, gatewayKey).
 			Where(dao.MerchantGateway.Columns().GatewaySecret, gatewaySecret).
@@ -157,6 +158,7 @@ func SetupWireTransferGateway(ctx context.Context, req *WireTransferSetupReq) *e
 	utility.Assert(one == nil, "exist same gateway")
 	if config.GetConfigInstance().IsProd() {
 		err := dao.MerchantGateway.Ctx(ctx).
+			Where(dao.MerchantGateway.Columns().MerchantId, req.MerchantId).
 			Where(dao.MerchantGateway.Columns().GatewayName, gatewayName).
 			OmitEmpty().
 			Scan(&one)

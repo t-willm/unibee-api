@@ -33,7 +33,8 @@ var (
 	databaseLink                     string
 	databaseDebug                    string
 	databaseCharset                  string
-	authLoginExpire                  string
+	authLoginExpire                  int64
+	authLoginExpireStr               string
 	loggerLevel                      string
 	nacosIpArg                       string
 	nacosPortArg                     string
@@ -61,7 +62,7 @@ func Init() {
 	flag.StringVar(&databaseDebug, "database-debug", utility.GetEnvParam("database.debug"), "database debug, default false")
 	flag.StringVar(&databaseCharset, "database-charset", utility.GetEnvParam("database.charset"), "database charset, default utf8mb4")
 	flag.StringVar(&loggerLevel, "logger-level", utility.GetEnvParam("logger.level"), "logger level, default all")
-	flag.StringVar(&authLoginExpire, "auth-login-expire", utility.GetEnvParam("auth.login.expire"), "login token expire time, default 600")
+	flag.StringVar(&authLoginExpireStr, "auth-login-expire", utility.GetEnvParam("auth.login.expire"), "login token expire time, default 600")
 	flag.StringVar(&nacosIpArg, "nacos-ip", utility.GetEnvParam("nacos.ip"), "ip or domain, env params will replaced if nacos used")
 	flag.StringVar(&nacosPortArg, "nacos-port", utility.GetEnvParam("nacos.port"), "nacos port, 8848")
 	flag.StringVar(&nacosNamespaceArg, "nacos-namespace", utility.GetEnvParam("nacos.namespace"), "nacos namespace, default")
@@ -71,6 +72,10 @@ func Init() {
 
 	var ctx = gctx.New()
 	g.Cfg().GetAdapter().(*gcfg.AdapterFile).SetFileName(DefaultConfigFileName)
+
+	if len(authLoginExpireStr) > 0 {
+		authLoginExpire, _ = strconv.ParseInt(authLoginExpireStr, 10, 64)
+	}
 
 	// Parse Params
 	flag.Parse()
@@ -171,7 +176,9 @@ func SetupDefaultConfigs(ctx context.Context) {
 	setUpDefaultConfig(loggerConfig, "stdout", true, true)
 	authLoginConfig := g.Cfg().MustGet(ctx, "auth.login").Map()
 	utility.Assert(authLoginConfig != nil, "auth login config not found")
-	setUpDefaultConfig(authLoginConfig, "expire", authLoginExpire, 600)
+	if authLoginExpire > 0 {
+		setUpDefaultConfig(authLoginConfig, "expire", authLoginExpire, 600)
+	}
 	//vatConfig := g.Cfg().MustGet(ctx, "vatConfig").Map()
 	//if vatConfig != nil {
 	//	setUpDefaultConfig(vatConfig, "nonEuEnable", VatNonEuEnable, "false")

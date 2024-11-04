@@ -25,6 +25,7 @@ type MerchantDiscountCode struct {
 	CreateTime         int64                  `json:"createTime"         description:"create utc time"`                                                            // create utc time
 	PlanIds            []int64                `json:"planIds"  dc:"Ids of plan which discount code can effect, default effect all plans if not set" `
 	Metadata           map[string]interface{} `json:"metadata"           description:""`
+	Quantity           int64                  `json:"quantity"           description:"quantity of code, 0-no limit"`
 }
 
 func SimplifyMerchantDiscountCode(one *entity.MerchantDiscountCode) *MerchantDiscountCode {
@@ -68,5 +69,6 @@ func SimplifyMerchantDiscountCode(one *entity.MerchantDiscountCode) *MerchantDis
 		CreateTime:         one.CreateTime,
 		PlanIds:            planIds,
 		Metadata:           metadata,
+		Quantity:           one.Quantity,
 	}
 }

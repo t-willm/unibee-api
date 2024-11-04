@@ -13,7 +13,6 @@ const (
 	IncompleteExpireTime               = "IncompleteExpireTime"
 	InvoiceEmail                       = "InvoiceEmail"
 	TryAutomaticPaymentBeforePeriodEnd = "TryAutomaticPaymentBeforePeriodEnd"
-	FiatExchangeApiKey                 = "FiatExchangeApiKey"
 	GatewayVATRule                     = "GatewayVATRule"
 	ShowZeroInvoice                    = "ShowZeroInvoice"
 )
@@ -27,7 +26,7 @@ func GetMerchantSubscriptionConfig(ctx context.Context, merchantId uint64) (conf
 		InvoiceEmail:                       true,
 		TryAutomaticPaymentBeforePeriodEnd: 2 * 60 * 60, // default 2 hours before period
 		GatewayVATRule:                     "",
-		ShowZeroInvoice:                    false, // default false
+		ShowZeroInvoice:                    true, // default false
 	}
 	downgradeEffectImmediatelyConfig := merchant_config.GetMerchantConfig(ctx, merchantId, DowngradeEffectImmediately)
 	if downgradeEffectImmediatelyConfig != nil && downgradeEffectImmediatelyConfig.ConfigValue == "true" {
@@ -60,8 +59,8 @@ func GetMerchantSubscriptionConfig(ctx context.Context, merchantId uint64) (conf
 		config.GatewayVATRule = gatewayVATRule.ConfigValue
 	}
 	showZeroInvoice := merchant_config.GetMerchantConfig(ctx, merchantId, ShowZeroInvoice)
-	if showZeroInvoice != nil && showZeroInvoice.ConfigValue == "true" {
-		config.ShowZeroInvoice = true
+	if showZeroInvoice != nil && showZeroInvoice.ConfigValue == "false" {
+		config.ShowZeroInvoice = false
 	}
 	return config
 }
