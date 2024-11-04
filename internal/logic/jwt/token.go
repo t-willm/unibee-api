@@ -100,7 +100,7 @@ func PutAuthTokenToCache(ctx context.Context, token string, value string) bool {
 func PutAuthTokenToCacheWithExpire(ctx context.Context, token string, value string, expireSeconds int64) bool {
 	err := g.Redis().SetEX(ctx, getAuthTokenRedisKey(token), value, expireSeconds)
 	if err != nil {
-		g.Log().Errorf(ctx, "PutAuthTokenToCacheWithExpire, error:%s", err.Error())
+		g.Log().Errorf(ctx, "PutAuthTokenToCacheWithExpire, cahce error:%s", err.Error())
 		return false
 	}
 	return true
