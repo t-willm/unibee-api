@@ -22,7 +22,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Update version.txt
-        run: echo "${{ github.event.client_payload.version }}" > version.txt
+        run: echo "${{ github.ref_name }}" > version.txt
 
       - name: Build prod image and push
         uses: docker/build-push-action@v6
@@ -30,7 +30,7 @@ jobs:
           context: .
           file: manifest/docker/Dockerfile
           push: true
-          tags: "unibee/api:${{ github.event.client_payload.version }}"
+          tags: "unibee/api:${{ github.ref_name }}"
 
       - name: Create release
         uses: ncipollo/release-action@v1
