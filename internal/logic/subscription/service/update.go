@@ -118,19 +118,20 @@ func isUpgradeForSubscription(ctx context.Context, sub *entity.Subscription, pla
 }
 
 type UpdatePreviewInternalReq struct {
-	SubscriptionId   string                 `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
-	NewPlanId        uint64                 `json:"newPlanId" dc:"NewPlanId" v:"required"`
-	Quantity         int64                  `json:"quantity" dc:"Quantity，Default 1" `
-	GatewayId        *uint64                `json:"gatewayId" dc:"Id" `
-	EffectImmediate  int                    `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
-	AddonParams      []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
-	DiscountCode     string                 `json:"discountCode"        dc:"DiscountCode"`
-	TaxPercentage    *int64                 `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%, override subscription taxPercentage if provide"`
-	ProductData      *bean.PlanProductParam `json:"productData"  dc:"ProductData"  `
-	PaymentMethodId  string
-	IsSubmit         bool
-	Metadata         map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
-	ApplyPromoCredit *bool                  `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	SubscriptionId         string                 `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
+	NewPlanId              uint64                 `json:"newPlanId" dc:"NewPlanId" v:"required"`
+	Quantity               int64                  `json:"quantity" dc:"Quantity，Default 1" `
+	GatewayId              *uint64                `json:"gatewayId" dc:"Id" `
+	EffectImmediate        int                    `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
+	AddonParams            []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
+	DiscountCode           string                 `json:"discountCode"        dc:"DiscountCode"`
+	TaxPercentage          *int64                 `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%, override subscription taxPercentage if provide"`
+	ProductData            *bean.PlanProductParam `json:"productData"  dc:"ProductData"  `
+	PaymentMethodId        string
+	IsSubmit               bool
+	Metadata               map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
+	ApplyPromoCredit       *bool                  `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 type UpdatePreviewInternalRes struct {
@@ -276,7 +277,7 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 		{
 			//conflict, disable discount code
 			if promoCreditDiscountCodeExclusive && canApply && req.ApplyPromoCredit != nil && *req.ApplyPromoCredit {
-				_, promoCreditPayout, _ := payment.CheckCreditUserPayout(ctx, sub.MerchantId, sub.UserId, consts.CreditAccountTypePromo, plan.Currency, plan.Amount)
+				_, promoCreditPayout, _ := payment.CheckCreditUserPayout(ctx, sub.MerchantId, sub.UserId, consts.CreditAccountTypePromo, plan.Currency, plan.Amount, req.ApplyPromoCreditAmount)
 				if promoCreditPayout != nil && promoCreditPayout.CurrencyAmount > 0 {
 					discountMessage = "Promo Credit Conflict with Discount code"
 					req.DiscountCode = ""
@@ -303,24 +304,25 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 		if !config.GetMerchantSubscriptionConfig(ctx, sub.MerchantId).UpgradeProration {
 			// without proration, just generate next cycle
 			currentInvoice = invoice_compute.ComputeSubscriptionBillingCycleInvoiceDetailSimplify(ctx, &invoice_compute.CalculateInvoiceReq{
-				UserId:             sub.UserId,
-				InvoiceName:        "SubscriptionUpdate",
-				Currency:           sub.Currency,
-				DiscountCode:       req.DiscountCode,
-				TimeNow:            prorationDate,
-				PlanId:             req.NewPlanId,
-				Quantity:           req.Quantity,
-				AddonJsonData:      utility.MarshalToJsonString(req.AddonParams),
-				CountryCode:        countryCode,
-				VatNumber:          vatNumber,
-				TaxPercentage:      subscriptionTaxPercentage,
-				PeriodStart:        prorationDate,
-				PeriodEnd:          subscription2.GetPeriodEndFromStart(ctx, prorationDate, prorationDate, req.NewPlanId),
-				FinishTime:         prorationDate,
-				ProductData:        req.ProductData,
-				BillingCycleAnchor: prorationDate,
-				Metadata:           req.Metadata,
-				ApplyPromoCredit:   *req.ApplyPromoCredit,
+				UserId:                 sub.UserId,
+				InvoiceName:            "SubscriptionUpdate",
+				Currency:               sub.Currency,
+				DiscountCode:           req.DiscountCode,
+				TimeNow:                prorationDate,
+				PlanId:                 req.NewPlanId,
+				Quantity:               req.Quantity,
+				AddonJsonData:          utility.MarshalToJsonString(req.AddonParams),
+				CountryCode:            countryCode,
+				VatNumber:              vatNumber,
+				TaxPercentage:          subscriptionTaxPercentage,
+				PeriodStart:            prorationDate,
+				PeriodEnd:              subscription2.GetPeriodEndFromStart(ctx, prorationDate, prorationDate, req.NewPlanId),
+				FinishTime:             prorationDate,
+				ProductData:            req.ProductData,
+				BillingCycleAnchor:     prorationDate,
+				Metadata:               req.Metadata,
+				ApplyPromoCredit:       *req.ApplyPromoCredit,
+				ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 			})
 		} else if prorationDate < sub.CurrentPeriodStart {
 			// after period end before trial end, also or sub data not sync or use testClock in stage env
@@ -348,24 +350,25 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 		} else if prorationDate > sub.CurrentPeriodEnd {
 			// after periodEnd, is not a currentInvoice, just use it
 			currentInvoice = invoice_compute.ComputeSubscriptionBillingCycleInvoiceDetailSimplify(ctx, &invoice_compute.CalculateInvoiceReq{
-				UserId:             sub.UserId,
-				InvoiceName:        "SubscriptionUpdate",
-				Currency:           sub.Currency,
-				DiscountCode:       req.DiscountCode,
-				TimeNow:            prorationDate,
-				PlanId:             req.NewPlanId,
-				Quantity:           req.Quantity,
-				AddonJsonData:      utility.MarshalToJsonString(req.AddonParams),
-				CountryCode:        countryCode,
-				VatNumber:          vatNumber,
-				TaxPercentage:      subscriptionTaxPercentage,
-				PeriodStart:        prorationDate,
-				PeriodEnd:          subscription2.GetPeriodEndFromStart(ctx, prorationDate, prorationDate, req.NewPlanId),
-				FinishTime:         prorationDate,
-				ProductData:        req.ProductData,
-				BillingCycleAnchor: prorationDate,
-				Metadata:           req.Metadata,
-				ApplyPromoCredit:   *req.ApplyPromoCredit,
+				UserId:                 sub.UserId,
+				InvoiceName:            "SubscriptionUpdate",
+				Currency:               sub.Currency,
+				DiscountCode:           req.DiscountCode,
+				TimeNow:                prorationDate,
+				PlanId:                 req.NewPlanId,
+				Quantity:               req.Quantity,
+				AddonJsonData:          utility.MarshalToJsonString(req.AddonParams),
+				CountryCode:            countryCode,
+				VatNumber:              vatNumber,
+				TaxPercentage:          subscriptionTaxPercentage,
+				PeriodStart:            prorationDate,
+				PeriodEnd:              subscription2.GetPeriodEndFromStart(ctx, prorationDate, prorationDate, req.NewPlanId),
+				FinishTime:             prorationDate,
+				ProductData:            req.ProductData,
+				BillingCycleAnchor:     prorationDate,
+				Metadata:               req.Metadata,
+				ApplyPromoCredit:       *req.ApplyPromoCredit,
+				ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 			})
 		} else {
 			// currentInvoice
@@ -406,48 +409,50 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 			}
 			if !hasIntervalChange {
 				currentInvoice = invoice_compute.ComputeSubscriptionProrationToFixedEndInvoiceDetailSimplify(ctx, &invoice_compute.CalculateProrationInvoiceReq{
-					UserId:            sub.UserId,
-					MerchantId:        sub.MerchantId,
-					InvoiceName:       "SubscriptionUpdate",
-					ProductName:       plan.PlanName,
-					Currency:          sub.Currency,
-					DiscountCode:      req.DiscountCode,
-					TimeNow:           prorationDate,
-					CountryCode:       countryCode,
-					VatNumber:         vatNumber,
-					TaxPercentage:     subscriptionTaxPercentage,
-					ProrationDate:     prorationDate,
-					OldProrationPlans: oldProrationPlanParams,
-					NewProrationPlans: newProrationPlanParams,
-					PeriodStart:       sub.CurrentPeriodStart,
-					PeriodEnd:         sub.CurrentPeriodEnd,
-					Metadata:          req.Metadata,
-					OldDiscountCode:   oldCode,
-					OldTaxPercentage:  sub.TaxPercentage,
-					ApplyPromoCredit:  *req.ApplyPromoCredit,
+					UserId:                 sub.UserId,
+					MerchantId:             sub.MerchantId,
+					InvoiceName:            "SubscriptionUpdate",
+					ProductName:            plan.PlanName,
+					Currency:               sub.Currency,
+					DiscountCode:           req.DiscountCode,
+					TimeNow:                prorationDate,
+					CountryCode:            countryCode,
+					VatNumber:              vatNumber,
+					TaxPercentage:          subscriptionTaxPercentage,
+					ProrationDate:          prorationDate,
+					OldProrationPlans:      oldProrationPlanParams,
+					NewProrationPlans:      newProrationPlanParams,
+					PeriodStart:            sub.CurrentPeriodStart,
+					PeriodEnd:              sub.CurrentPeriodEnd,
+					Metadata:               req.Metadata,
+					OldDiscountCode:        oldCode,
+					OldTaxPercentage:       sub.TaxPercentage,
+					ApplyPromoCredit:       *req.ApplyPromoCredit,
+					ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 				})
 			} else {
 				currentInvoice = invoice_compute.ComputeSubscriptionProrationToDifferentIntervalInvoiceDetailSimplify(ctx, &invoice_compute.CalculateProrationInvoiceReq{
-					UserId:             sub.UserId,
-					MerchantId:         sub.MerchantId,
-					InvoiceName:        "SubscriptionUpdate",
-					ProductName:        plan.PlanName,
-					Currency:           sub.Currency,
-					DiscountCode:       req.DiscountCode,
-					TimeNow:            prorationDate,
-					CountryCode:        countryCode,
-					VatNumber:          vatNumber,
-					TaxPercentage:      subscriptionTaxPercentage,
-					ProrationDate:      prorationDate,
-					OldProrationPlans:  oldProrationPlanParams,
-					NewProrationPlans:  newProrationPlanParams,
-					PeriodStart:        sub.CurrentPeriodStart,
-					PeriodEnd:          sub.CurrentPeriodEnd,
-					BillingCycleAnchor: prorationDate,
-					Metadata:           req.Metadata,
-					OldDiscountCode:    oldCode,
-					OldTaxPercentage:   sub.TaxPercentage,
-					ApplyPromoCredit:   *req.ApplyPromoCredit,
+					UserId:                 sub.UserId,
+					MerchantId:             sub.MerchantId,
+					InvoiceName:            "SubscriptionUpdate",
+					ProductName:            plan.PlanName,
+					Currency:               sub.Currency,
+					DiscountCode:           req.DiscountCode,
+					TimeNow:                prorationDate,
+					CountryCode:            countryCode,
+					VatNumber:              vatNumber,
+					TaxPercentage:          subscriptionTaxPercentage,
+					ProrationDate:          prorationDate,
+					OldProrationPlans:      oldProrationPlanParams,
+					NewProrationPlans:      newProrationPlanParams,
+					PeriodStart:            sub.CurrentPeriodStart,
+					PeriodEnd:              sub.CurrentPeriodEnd,
+					BillingCycleAnchor:     prorationDate,
+					Metadata:               req.Metadata,
+					OldDiscountCode:        oldCode,
+					OldTaxPercentage:       sub.TaxPercentage,
+					ApplyPromoCredit:       *req.ApplyPromoCredit,
+					ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 				})
 			}
 		}
@@ -539,24 +544,25 @@ func SubscriptionUpdatePreview(ctx context.Context, req *UpdatePreviewInternalRe
 }
 
 type UpdateInternalReq struct {
-	SubscriptionId     string                      `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
-	NewPlanId          uint64                      `json:"newPlanId" dc:"NewPlanId" v:"required"`
-	Quantity           int64                       `json:"quantity" dc:"Quantity，Default 1" `
-	GatewayId          *uint64                     `json:"gatewayId" dc:"GatewayId" `
-	AddonParams        []*bean.PlanAddonParam      `json:"addonParams" dc:"addonParams" `
-	ConfirmTotalAmount int64                       `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
-	ConfirmCurrency    string                      `json:"confirmCurrency" dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
-	ProrationDate      *int64                      `json:"prorationDate" dc:"The utc time to start Proration, default current time" `
-	EffectImmediate    int                         `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
-	Metadata           map[string]interface{}      `json:"metadata" dc:"Metadata，Map"`
-	DiscountCode       string                      `json:"discountCode"        dc:"DiscountCode"`
-	TaxPercentage      *int64                      `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%, override subscription taxPercentage if provide"`
-	Discount           *bean.ExternalDiscountParam `json:"discount" dc:"Discount, override subscription discount"`
-	ManualPayment      bool                        `json:"manualPayment" dc:"ManualPayment"`
-	ReturnUrl          string                      `json:"returnUrl"  dc:"ReturnUrl"  `
-	CancelUrl          string                      `json:"cancelUrl" dc:"CancelUrl"`
-	ProductData        *bean.PlanProductParam      `json:"productData"  dc:"ProductData"  `
-	ApplyPromoCredit   bool                        `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	SubscriptionId         string                      `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
+	NewPlanId              uint64                      `json:"newPlanId" dc:"NewPlanId" v:"required"`
+	Quantity               int64                       `json:"quantity" dc:"Quantity，Default 1" `
+	GatewayId              *uint64                     `json:"gatewayId" dc:"GatewayId" `
+	AddonParams            []*bean.PlanAddonParam      `json:"addonParams" dc:"addonParams" `
+	ConfirmTotalAmount     int64                       `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
+	ConfirmCurrency        string                      `json:"confirmCurrency" dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
+	ProrationDate          *int64                      `json:"prorationDate" dc:"The utc time to start Proration, default current time" `
+	EffectImmediate        int                         `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
+	Metadata               map[string]interface{}      `json:"metadata" dc:"Metadata，Map"`
+	DiscountCode           string                      `json:"discountCode"        dc:"DiscountCode"`
+	TaxPercentage          *int64                      `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%, override subscription taxPercentage if provide"`
+	Discount               *bean.ExternalDiscountParam `json:"discount" dc:"Discount, override subscription discount"`
+	ManualPayment          bool                        `json:"manualPayment" dc:"ManualPayment"`
+	ReturnUrl              string                      `json:"returnUrl"  dc:"ReturnUrl"  `
+	CancelUrl              string                      `json:"cancelUrl" dc:"CancelUrl"`
+	ProductData            *bean.PlanProductParam      `json:"productData"  dc:"ProductData"  `
+	ApplyPromoCredit       bool                        `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                      `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 type UpdateInternalRes struct {
@@ -588,18 +594,19 @@ func SubscriptionUpdate(ctx context.Context, req *UpdateInternalReq, merchantMem
 		utility.Assert(one.Type == 0, "invalid code, code is from external")
 	}
 	prepare, err := SubscriptionUpdatePreview(ctx, &UpdatePreviewInternalReq{
-		SubscriptionId:   req.SubscriptionId,
-		NewPlanId:        req.NewPlanId,
-		Quantity:         req.Quantity,
-		AddonParams:      req.AddonParams,
-		GatewayId:        req.GatewayId,
-		EffectImmediate:  req.EffectImmediate,
-		DiscountCode:     req.DiscountCode,
-		TaxPercentage:    req.TaxPercentage,
-		ProductData:      req.ProductData,
-		Metadata:         req.Metadata,
-		IsSubmit:         true,
-		ApplyPromoCredit: unibee.Bool(req.ApplyPromoCredit),
+		SubscriptionId:         req.SubscriptionId,
+		NewPlanId:              req.NewPlanId,
+		Quantity:               req.Quantity,
+		AddonParams:            req.AddonParams,
+		GatewayId:              req.GatewayId,
+		EffectImmediate:        req.EffectImmediate,
+		DiscountCode:           req.DiscountCode,
+		TaxPercentage:          req.TaxPercentage,
+		ProductData:            req.ProductData,
+		Metadata:               req.Metadata,
+		IsSubmit:               true,
+		ApplyPromoCredit:       unibee.Bool(req.ApplyPromoCredit),
+		ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 	}, prorationDate, merchantMemberId)
 	if err != nil {
 		return nil, err

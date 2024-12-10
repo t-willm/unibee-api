@@ -21,7 +21,7 @@ import (
 	"unibee/utility"
 )
 
-func CheckCreditUserPayout(ctx context.Context, merchantId uint64, userId uint64, creditType int, currency string, currencyAmount int64) (*bean.CreditAccount, *bean.CreditPayout, error) {
+func CheckCreditUserPayout(ctx context.Context, merchantId uint64, userId uint64, creditType int, currency string, currencyAmount int64, applyCreditPaymentAmount *int64) (*bean.CreditAccount, *bean.CreditPayout, error) {
 	if merchantId < 0 || userId < 0 {
 		return nil, nil, gerror.New("invalid merchantId or userId")
 	}
@@ -48,16 +48,31 @@ func CheckCreditUserPayout(ctx context.Context, merchantId uint64, userId uint64
 	if account.Amount == 0 {
 		return nil, nil, gerror.New("credit account amount is zero")
 	}
-	creditPaymentAmount, _ := config.ConvertCurrencyAmountToCreditAmount(ctx, merchantId, creditType, currency, currencyAmount)
-	if creditPaymentAmount > account.Amount {
-		creditPaymentAmount = account.Amount
-		currencyAmount, _ = config.ConvertCurrencyAmountToCreditAmount(ctx, merchantId, creditType, currency, creditPaymentAmount)
+	if applyCreditPaymentAmount == nil {
+		creditPaymentAmount, _ := config.ConvertCurrencyAmountToCreditAmount(ctx, merchantId, creditType, currency, currencyAmount)
+		if creditPaymentAmount > account.Amount {
+			creditPaymentAmount = account.Amount
+			currencyAmount, _ = config.ConvertCreditAmountToCurrency(ctx, merchantId, creditType, currency, creditPaymentAmount)
+		}
+		return bean.SimplifyCreditAccount(account), &bean.CreditPayout{
+			ExchangeRate:   one.ExchangeRate,
+			CreditAmount:   creditPaymentAmount,
+			CurrencyAmount: currencyAmount,
+		}, nil
+	} else {
+		if *applyCreditPaymentAmount < 0 {
+			return nil, nil, gerror.New("invalid promo credit amount")
+		}
+		if *applyCreditPaymentAmount > account.Amount {
+			*applyCreditPaymentAmount = account.Amount
+		}
+		currencyAmount, _ = config.ConvertCreditAmountToCurrency(ctx, merchantId, creditType, currency, *applyCreditPaymentAmount)
+		return bean.SimplifyCreditAccount(account), &bean.CreditPayout{
+			ExchangeRate:   one.ExchangeRate,
+			CreditAmount:   *applyCreditPaymentAmount,
+			CurrencyAmount: currencyAmount,
+		}, nil
 	}
-	return bean.SimplifyCreditAccount(account), &bean.CreditPayout{
-		ExchangeRate:   one.ExchangeRate,
-		CreditAmount:   creditPaymentAmount,
-		CurrencyAmount: currencyAmount,
-	}, nil
 }
 
 type CreditPaymentInternalReq struct {

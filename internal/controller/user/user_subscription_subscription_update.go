@@ -21,18 +21,19 @@ func (c *ControllerSubscription) Update(ctx context.Context, req *subscription.U
 		utility.Assert(_interface.Context().Get(ctx).User.Id == sub.UserId, "userId not match")
 	}
 	resp, err := service.SubscriptionUpdate(ctx, &service.UpdateInternalReq{
-		SubscriptionId:     req.SubscriptionId,
-		NewPlanId:          req.NewPlanId,
-		Quantity:           req.Quantity,
-		GatewayId:          req.GatewayId,
-		AddonParams:        req.AddonParams,
-		ConfirmTotalAmount: req.ConfirmTotalAmount,
-		ConfirmCurrency:    req.ConfirmCurrency,
-		ProrationDate:      req.ProrationDate,
-		EffectImmediate:    req.EffectImmediate,
-		Metadata:           req.Metadata,
-		DiscountCode:       req.DiscountCode,
-		ApplyPromoCredit:   req.ApplyPromoCredit,
+		SubscriptionId:         req.SubscriptionId,
+		NewPlanId:              req.NewPlanId,
+		Quantity:               req.Quantity,
+		GatewayId:              req.GatewayId,
+		AddonParams:            req.AddonParams,
+		ConfirmTotalAmount:     req.ConfirmTotalAmount,
+		ConfirmCurrency:        req.ConfirmCurrency,
+		ProrationDate:          req.ProrationDate,
+		EffectImmediate:        req.EffectImmediate,
+		Metadata:               req.Metadata,
+		DiscountCode:           req.DiscountCode,
+		ApplyPromoCredit:       req.ApplyPromoCredit,
+		ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 	}, 0)
 	if err != nil {
 		return nil, err

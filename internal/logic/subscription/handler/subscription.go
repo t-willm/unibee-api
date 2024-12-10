@@ -16,6 +16,7 @@ import (
 	subscription2 "unibee/internal/logic/subscription"
 	"unibee/internal/logic/subscription/timeline"
 	"unibee/internal/logic/user/sub_update"
+	"unibee/internal/logic/vat_gateway"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
 	"unibee/utility"
@@ -167,6 +168,11 @@ func HandleSubscriptionNextBillingCyclePaymentSuccess(ctx context.Context, sub *
 	}).Where(dao.Subscription.Columns().Id, sub.Id).OmitNil().Update()
 	if err != nil {
 		return err
+	}
+	{
+		if vat_gateway.GetDefaultVatGateway(ctx, invoice.MerchantId) == nil {
+			sub_update.UpdateUserTaxPercentageOnly(ctx, invoice.UserId, invoice.TaxPercentage)
+		}
 	}
 	timeline.SubscriptionNewTimeline(ctx, invoice)
 	if utility.TryLock(ctx, fmt.Sprintf("HandleSubscriptionNextBillingCyclePaymentSuccess_%s", invoice.InvoiceId), 60) {

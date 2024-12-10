@@ -179,9 +179,9 @@ func SimplifyCreditTransaction(one *entity.CreditTransaction) *CreditTransaction
 }
 
 type CreditPayout struct {
-	ExchangeRate   int64 `json:"exchangeRate"            description:"exchange rate"`
-	CreditAmount   int64 `json:"creditAmount"      description:"credit amount"`
-	CurrencyAmount int64 `json:"currencyAmount"      description:"currency amount"`
+	ExchangeRate   int64 `json:"exchangeRate"            description:"exchange rate, keep two decimal places，scale = 100, 1 currency = 1 credit * (exchange_rate/100), main account fixed rate to 100"`
+	CreditAmount   int64 `json:"creditAmount"      description:"credit amount, scale = 100"`
+	CurrencyAmount int64 `json:"currencyAmount"      description:"currency amount,cent"`
 }
 
 type CreditPayment struct {

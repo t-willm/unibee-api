@@ -48,15 +48,16 @@ type PayCheckRes struct {
 }
 
 type CreatePreviewReq struct {
-	g.Meta           `path:"/create_preview" tags:"User-Subscription" method:"post" summary:"User Create Subscription Preview"`
-	PlanId           uint64                 `json:"planId" dc:"PlanId" v:"required"`
-	Quantity         int64                  `json:"quantity" dc:"Quantity" `
-	GatewayId        *uint64                `json:"gatewayId" dc:"Id" `
-	AddonParams      []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
-	VatCountryCode   string                 `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
-	VatNumber        string                 `json:"vatNumber" dc:"VatNumber" `
-	DiscountCode     string                 `json:"discountCode"        dc:"DiscountCode"`
-	ApplyPromoCredit *bool                  `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	g.Meta                 `path:"/create_preview" tags:"User-Subscription" method:"post" summary:"User Create Subscription Preview"`
+	PlanId                 uint64                 `json:"planId" dc:"PlanId" v:"required"`
+	Quantity               int64                  `json:"quantity" dc:"Quantity" `
+	GatewayId              *uint64                `json:"gatewayId" dc:"Id" `
+	AddonParams            []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
+	VatCountryCode         string                 `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
+	VatNumber              string                 `json:"vatNumber" dc:"VatNumber" `
+	DiscountCode           string                 `json:"discountCode"        dc:"DiscountCode"`
+	ApplyPromoCredit       *bool                  `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 type CreatePreviewRes struct {
 	Plan                      *bean.Plan                 `json:"plan"`
@@ -85,20 +86,21 @@ type CreatePreviewRes struct {
 }
 
 type CreateReq struct {
-	g.Meta             `path:"/create_submit" tags:"User-Subscription" method:"post" summary:"User Create Subscription"`
-	PlanId             uint64                 `json:"planId" dc:"PlanId" v:"required"`
-	Quantity           int64                  `json:"quantity" dc:"Quantity，Default 1" `
-	GatewayId          *uint64                `json:"gatewayId" dc:"Id" `
-	AddonParams        []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
-	ConfirmTotalAmount int64                  `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
-	ConfirmCurrency    string                 `json:"confirmCurrency"  dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
-	ReturnUrl          string                 `json:"returnUrl"  dc:"RedirectUrl"  `
-	VatCountryCode     string                 `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
-	VatNumber          string                 `json:"vatNumber" dc:"VatNumber" `
-	PaymentMethodId    string                 `json:"paymentMethodId" dc:"PaymentMethodId" `
-	DiscountCode       string                 `json:"discountCode"        dc:"DiscountCode"`
-	Metadata           map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
-	ApplyPromoCredit   bool                   `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	g.Meta                 `path:"/create_submit" tags:"User-Subscription" method:"post" summary:"User Create Subscription"`
+	PlanId                 uint64                 `json:"planId" dc:"PlanId" v:"required"`
+	Quantity               int64                  `json:"quantity" dc:"Quantity，Default 1" `
+	GatewayId              *uint64                `json:"gatewayId" dc:"Id" `
+	AddonParams            []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
+	ConfirmTotalAmount     int64                  `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
+	ConfirmCurrency        string                 `json:"confirmCurrency"  dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
+	ReturnUrl              string                 `json:"returnUrl"  dc:"RedirectUrl"  `
+	VatCountryCode         string                 `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
+	VatNumber              string                 `json:"vatNumber" dc:"VatNumber" `
+	PaymentMethodId        string                 `json:"paymentMethodId" dc:"PaymentMethodId" `
+	DiscountCode           string                 `json:"discountCode"        dc:"DiscountCode"`
+	Metadata               map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
+	ApplyPromoCredit       bool                   `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 type CreateRes struct {
@@ -108,15 +110,16 @@ type CreateRes struct {
 }
 
 type UpdatePreviewReq struct {
-	g.Meta           `path:"/update_preview" tags:"User-Subscription" method:"post" summary:"User Update Subscription Preview"`
-	SubscriptionId   string                 `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
-	NewPlanId        uint64                 `json:"newPlanId" dc:"NewPlanId" v:"required"`
-	Quantity         int64                  `json:"quantity" dc:"Quantity，Default 1" `
-	GatewayId        *uint64                `json:"gatewayId" dc:"Id" `
-	EffectImmediate  int                    `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
-	AddonParams      []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
-	DiscountCode     string                 `json:"discountCode"        dc:"DiscountCode"`
-	ApplyPromoCredit *bool                  `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	g.Meta                 `path:"/update_preview" tags:"User-Subscription" method:"post" summary:"User Update Subscription Preview"`
+	SubscriptionId         string                 `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
+	NewPlanId              uint64                 `json:"newPlanId" dc:"NewPlanId" v:"required"`
+	Quantity               int64                  `json:"quantity" dc:"Quantity，Default 1" `
+	GatewayId              *uint64                `json:"gatewayId" dc:"Id" `
+	EffectImmediate        int                    `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
+	AddonParams            []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
+	DiscountCode           string                 `json:"discountCode"        dc:"DiscountCode"`
+	ApplyPromoCredit       *bool                  `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 type UpdatePreviewRes struct {
 	OriginAmount      int64                      `json:"originAmount"                `
@@ -132,19 +135,20 @@ type UpdatePreviewRes struct {
 }
 
 type UpdateReq struct {
-	g.Meta             `path:"/update_submit" tags:"User-Subscription" method:"post" summary:"User Update Subscription"`
-	SubscriptionId     string                 `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
-	NewPlanId          uint64                 `json:"newPlanId" dc:"NewPlanId" v:"required"`
-	Quantity           int64                  `json:"quantity" dc:"Quantity，Default 1" `
-	GatewayId          *uint64                `json:"gatewayId" dc:"Id" `
-	AddonParams        []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
-	ConfirmTotalAmount int64                  `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
-	ConfirmCurrency    string                 `json:"confirmCurrency" dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
-	ProrationDate      *int64                 `json:"prorationDate" dc:"The utc time to start Proration, default current time" `
-	EffectImmediate    int                    `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
-	Metadata           map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
-	DiscountCode       string                 `json:"discountCode"        dc:"DiscountCode"`
-	ApplyPromoCredit   bool                   `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	g.Meta                 `path:"/update_submit" tags:"User-Subscription" method:"post" summary:"User Update Subscription"`
+	SubscriptionId         string                 `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
+	NewPlanId              uint64                 `json:"newPlanId" dc:"NewPlanId" v:"required"`
+	Quantity               int64                  `json:"quantity" dc:"Quantity，Default 1" `
+	GatewayId              *uint64                `json:"gatewayId" dc:"Id" `
+	AddonParams            []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
+	ConfirmTotalAmount     int64                  `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
+	ConfirmCurrency        string                 `json:"confirmCurrency" dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
+	ProrationDate          *int64                 `json:"prorationDate" dc:"The utc time to start Proration, default current time" `
+	EffectImmediate        int                    `json:"effectImmediate" dc:"Effect Immediate，1-Immediate，2-Next Period" `
+	Metadata               map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
+	DiscountCode           string                 `json:"discountCode"        dc:"DiscountCode"`
+	ApplyPromoCredit       bool                   `json:"applyPromoCredit"  dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 type UpdateRes struct {

@@ -81,6 +81,13 @@ func UpdateUserVatNumber(ctx context.Context, userId uint64, vatNumber string) {
 	}
 }
 
+func UpdateUserTaxPercentageOnly(ctx context.Context, userId uint64, taxPercentage int64) {
+	_, _ = dao.UserAccount.Ctx(ctx).Data(g.Map{
+		dao.UserAccount.Columns().TaxPercentage: taxPercentage,
+		dao.UserAccount.Columns().GmtModify:     gtime.Now(),
+	}).Where(dao.UserAccount.Columns().Id, userId).Update()
+}
+
 func UpdateUserCountryCode(ctx context.Context, userId uint64, countryCode string) {
 	utility.Assert(userId > 0, "userId is nil")
 	user := query.GetUserAccountById(ctx, userId)
