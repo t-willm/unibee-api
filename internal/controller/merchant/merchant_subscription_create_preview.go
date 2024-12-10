@@ -72,18 +72,19 @@ func (c *ControllerSubscription) CreatePreview(ctx context.Context, req *subscri
 		req.UserId = user.Id
 	}
 	prepare, err := service.SubscriptionCreatePreview(ctx, &service.CreatePreviewInternalReq{
-		MerchantId:       _interface.GetMerchantId(ctx),
-		PlanId:           req.PlanId,
-		UserId:           req.UserId,
-		Quantity:         req.Quantity,
-		GatewayId:        req.GatewayId,
-		AddonParams:      req.AddonParams,
-		VatCountryCode:   req.VatCountryCode,
-		VatNumber:        req.VatNumber,
-		TaxPercentage:    req.TaxPercentage,
-		DiscountCode:     req.DiscountCode,
-		TrialEnd:         req.TrialEnd,
-		ApplyPromoCredit: req.ApplyPromoCredit,
+		MerchantId:             _interface.GetMerchantId(ctx),
+		PlanId:                 req.PlanId,
+		UserId:                 req.UserId,
+		Quantity:               req.Quantity,
+		GatewayId:              req.GatewayId,
+		AddonParams:            req.AddonParams,
+		VatCountryCode:         req.VatCountryCode,
+		VatNumber:              req.VatNumber,
+		TaxPercentage:          req.TaxPercentage,
+		DiscountCode:           req.DiscountCode,
+		TrialEnd:               req.TrialEnd,
+		ApplyPromoCredit:       req.ApplyPromoCredit,
+		ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 	})
 	if err != nil {
 		return nil, err

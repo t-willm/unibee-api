@@ -18,25 +18,26 @@ import (
 )
 
 type CalculateInvoiceReq struct {
-	UserId             uint64                 `json:"userId"`
-	Currency           string                 `json:"currency"`
-	DiscountCode       string                 `json:"discountCode"`
-	TimeNow            int64                  `json:"TimeNow"`
-	PlanId             uint64                 `json:"planId"`
-	Quantity           int64                  `json:"quantity"`
-	AddonJsonData      string                 `json:"addonJsonData"`
-	CountryCode        string                 `json:"CountryCode"`
-	VatNumber          string                 `json:"vatNumber"`
-	TaxPercentage      int64                  `json:"taxPercentage"`
-	PeriodStart        int64                  `json:"periodStart"`
-	PeriodEnd          int64                  `json:"periodEnd"`
-	FinishTime         int64                  `json:"finishTime"`
-	InvoiceName        string                 `json:"invoiceName"`
-	ProductData        *bean.PlanProductParam `json:"productData"  dc:"ProductData"  `
-	BillingCycleAnchor int64                  `json:"billingCycleAnchor"             description:"billing_cycle_anchor"` // billing_cycle_anchor
-	CreateFrom         string                 `json:"createFrom"                     description:"create from"`          // create from
-	Metadata           map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
-	ApplyPromoCredit   bool                   `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	UserId                 uint64                 `json:"userId"`
+	Currency               string                 `json:"currency"`
+	DiscountCode           string                 `json:"discountCode"`
+	TimeNow                int64                  `json:"TimeNow"`
+	PlanId                 uint64                 `json:"planId"`
+	Quantity               int64                  `json:"quantity"`
+	AddonJsonData          string                 `json:"addonJsonData"`
+	CountryCode            string                 `json:"CountryCode"`
+	VatNumber              string                 `json:"vatNumber"`
+	TaxPercentage          int64                  `json:"taxPercentage"`
+	PeriodStart            int64                  `json:"periodStart"`
+	PeriodEnd              int64                  `json:"periodEnd"`
+	FinishTime             int64                  `json:"finishTime"`
+	InvoiceName            string                 `json:"invoiceName"`
+	ProductData            *bean.PlanProductParam `json:"productData"  dc:"ProductData"  `
+	BillingCycleAnchor     int64                  `json:"billingCycleAnchor"             description:"billing_cycle_anchor"` // billing_cycle_anchor
+	CreateFrom             string                 `json:"createFrom"                     description:"create from"`          // create from
+	Metadata               map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
+	ApplyPromoCredit       bool                   `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 func VerifyInvoiceSimplify(one *bean.Invoice) {
@@ -291,7 +292,7 @@ func ComputeSubscriptionBillingCycleInvoiceDetailSimplify(ctx context.Context, r
 	var promoCreditPayout *bean.CreditPayout
 	var creditPayoutErr error
 	if req.ApplyPromoCredit {
-		promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, plan.MerchantId, req.UserId, consts.CreditAccountTypePromo, plan.Currency, totalAmountExcludingTax)
+		promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, plan.MerchantId, req.UserId, consts.CreditAccountTypePromo, plan.Currency, totalAmountExcludingTax, req.ApplyPromoCreditAmount)
 		if creditPayoutErr == nil && promoCreditAccount != nil && promoCreditPayout != nil {
 			promoCreditDiscountAmount = promoCreditPayout.CurrencyAmount
 			totalAmountExcludingTax = totalAmountExcludingTax - promoCreditDiscountAmount
@@ -341,27 +342,28 @@ type ProrationPlanParam struct {
 }
 
 type CalculateProrationInvoiceReq struct {
-	UserId             uint64                 `json:"userId"`
-	MerchantId         uint64                 `json:"merchantId"`
-	Currency           string                 `json:"currency"`
-	DiscountCode       string                 `json:"discountCode"`
-	TimeNow            int64                  `json:"TimeNow"`
-	CountryCode        string                 `json:"countryCode"`
-	VatNumber          string                 `json:"vatNumber"`
-	TaxPercentage      int64                  `json:"taxPercentage"`
-	ProrationDate      int64                  `json:"prorationStart"`
-	PeriodStart        int64                  `json:"periodStart"`
-	PeriodEnd          int64                  `json:"periodEnd"`
-	FinishTime         int64                  `json:"finishTime"`
-	OldProrationPlans  []*ProrationPlanParam  `json:"oldPlans"`
-	NewProrationPlans  []*ProrationPlanParam  `json:"newPlans"`
-	InvoiceName        string                 `json:"invoiceName"`
-	ProductName        string                 `json:"productName"`
-	BillingCycleAnchor int64                  `json:"billingCycleAnchor"             description:"billing_cycle_anchor"` // billing_cycle_anchor
-	Metadata           map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
-	OldTaxPercentage   int64                  `json:"oldTaxPercentage"`
-	OldDiscountCode    string                 `json:"oldDiscountCode"`
-	ApplyPromoCredit   bool                   `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	UserId                 uint64                 `json:"userId"`
+	MerchantId             uint64                 `json:"merchantId"`
+	Currency               string                 `json:"currency"`
+	DiscountCode           string                 `json:"discountCode"`
+	TimeNow                int64                  `json:"TimeNow"`
+	CountryCode            string                 `json:"countryCode"`
+	VatNumber              string                 `json:"vatNumber"`
+	TaxPercentage          int64                  `json:"taxPercentage"`
+	ProrationDate          int64                  `json:"prorationStart"`
+	PeriodStart            int64                  `json:"periodStart"`
+	PeriodEnd              int64                  `json:"periodEnd"`
+	FinishTime             int64                  `json:"finishTime"`
+	OldProrationPlans      []*ProrationPlanParam  `json:"oldPlans"`
+	NewProrationPlans      []*ProrationPlanParam  `json:"newPlans"`
+	InvoiceName            string                 `json:"invoiceName"`
+	ProductName            string                 `json:"productName"`
+	BillingCycleAnchor     int64                  `json:"billingCycleAnchor"             description:"billing_cycle_anchor"` // billing_cycle_anchor
+	Metadata               map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
+	OldTaxPercentage       int64                  `json:"oldTaxPercentage"`
+	OldDiscountCode        string                 `json:"oldDiscountCode"`
+	ApplyPromoCredit       bool                   `json:"applyPromoCredit" dc:"apply promo credit or not"`
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 func ComputeSubscriptionProrationToFixedEndInvoiceDetailSimplify(ctx context.Context, req *CalculateProrationInvoiceReq) *bean.Invoice {
@@ -487,7 +489,7 @@ func ComputeSubscriptionProrationToFixedEndInvoiceDetailSimplify(ctx context.Con
 	var promoCreditPayout *bean.CreditPayout
 	var creditPayoutErr error
 	if req.ApplyPromoCredit {
-		promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, req.Currency, totalAmountExcludingTax)
+		promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, req.Currency, totalAmountExcludingTax, req.ApplyPromoCreditAmount)
 		if creditPayoutErr == nil && promoCreditAccount != nil && promoCreditPayout != nil {
 			promoCreditDiscountAmount = promoCreditPayout.CurrencyAmount
 			totalAmountExcludingTax = totalAmountExcludingTax - promoCreditDiscountAmount
@@ -621,7 +623,7 @@ func ComputeSubscriptionProrationToDifferentIntervalInvoiceDetailSimplify(ctx co
 	var promoCreditPayout *bean.CreditPayout
 	var creditPayoutErr error
 	if req.ApplyPromoCredit {
-		promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, req.Currency, totalAmountExcludingTax)
+		promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, req.Currency, totalAmountExcludingTax, req.ApplyPromoCreditAmount)
 		if creditPayoutErr == nil && promoCreditAccount != nil && promoCreditPayout != nil {
 			promoCreditDiscountAmount = promoCreditPayout.CurrencyAmount
 			totalAmountExcludingTax = totalAmountExcludingTax - promoCreditDiscountAmount

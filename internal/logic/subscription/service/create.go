@@ -38,22 +38,23 @@ import (
 )
 
 type CreatePreviewInternalReq struct {
-	MerchantId       uint64                 `json:"merchantId" dc:"MerchantId" v:"MerchantId"`
-	PlanId           uint64                 `json:"planId" dc:"PlanId" v:"required"`
-	UserId           uint64                 `json:"userId" dc:"UserId"`
-	Quantity         int64                  `json:"quantity" dc:"Quantity" `
-	DiscountCode     string                 `json:"discountCode"        dc:"DiscountCode"`
-	GatewayId        *uint64                `json:"gatewayId" dc:"Id"`
-	AddonParams      []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
-	VatCountryCode   string                 `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
-	VatNumber        string                 `json:"vatNumber" dc:"VatNumber" `
-	TaxPercentage    *int64                 `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%"`
-	TrialEnd         int64                  `json:"trialEnd"  description:"trial_end, utc time"` // trial_end, utc time
-	IsSubmit         bool
-	ProductData      *bean.PlanProductParam `json:"productData"  dc:"ProductData"  `
-	PaymentMethodId  string
-	Metadata         map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
-	ApplyPromoCredit *bool                  `json:"applyPromoCredit" `
+	MerchantId             uint64                 `json:"merchantId" dc:"MerchantId" v:"MerchantId"`
+	PlanId                 uint64                 `json:"planId" dc:"PlanId" v:"required"`
+	UserId                 uint64                 `json:"userId" dc:"UserId"`
+	Quantity               int64                  `json:"quantity" dc:"Quantity" `
+	DiscountCode           string                 `json:"discountCode"        dc:"DiscountCode"`
+	GatewayId              *uint64                `json:"gatewayId" dc:"Id"`
+	AddonParams            []*bean.PlanAddonParam `json:"addonParams" dc:"addonParams" `
+	VatCountryCode         string                 `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
+	VatNumber              string                 `json:"vatNumber" dc:"VatNumber" `
+	TaxPercentage          *int64                 `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%"`
+	TrialEnd               int64                  `json:"trialEnd"  description:"trial_end, utc time"` // trial_end, utc time
+	IsSubmit               bool
+	ProductData            *bean.PlanProductParam `json:"productData"  dc:"ProductData"  `
+	PaymentMethodId        string
+	Metadata               map[string]interface{} `json:"metadata" dc:"Metadata，Map"`
+	ApplyPromoCredit       *bool                  `json:"applyPromoCredit" `
+	ApplyPromoCreditAmount *int64                 `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 type CreatePreviewInternalRes struct {
@@ -91,27 +92,28 @@ type CreatePreviewInternalRes struct {
 }
 
 type CreateInternalReq struct {
-	MerchantId         uint64                      `json:"merchantId" dc:"MerchantId" v:"MerchantId"`
-	PlanId             uint64                      `json:"planId" dc:"PlanId" v:"required"`
-	UserId             uint64                      `json:"userId" dc:"UserId" v:"required"`
-	DiscountCode       string                      `json:"discountCode"        dc:"DiscountCode"`
-	Discount           *bean.ExternalDiscountParam `json:"discount" dc:"Discount"`
-	Quantity           int64                       `json:"quantity" dc:"Quantity，Default 1" `
-	GatewayId          *uint64                     `json:"gatewayId" dc:"Id" `
-	AddonParams        []*bean.PlanAddonParam      `json:"addonParams" dc:"addonParams" `
-	ConfirmTotalAmount int64                       `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
-	ConfirmCurrency    string                      `json:"confirmCurrency"  dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
-	ReturnUrl          string                      `json:"returnUrl"  dc:"RedirectUrl"  `
-	CancelUrl          string                      `json:"cancelUrl" dc:"CancelUrl"`
-	VatCountryCode     string                      `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
-	VatNumber          string                      `json:"vatNumber" dc:"VatNumber" `
-	TaxPercentage      *int64                      `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%"`
-	PaymentMethodId    string                      `json:"paymentMethodId" dc:"PaymentMethodId" `
-	Metadata           map[string]interface{}      `json:"metadata" dc:"Metadata，Map"`
-	TrialEnd           int64                       `json:"trialEnd"                    description:"trial_end, utc time"` // trial_end, utc time
-	StartIncomplete    bool                        `json:"StartIncomplete"        dc:"StartIncomplete, use now pay later, subscription will generate invoice and start with incomplete status if set"`
-	ProductData        *bean.PlanProductParam      `json:"productData"  dc:"ProductData"  `
-	ApplyPromoCredit   bool                        `json:"applyPromoCredit" `
+	MerchantId             uint64                      `json:"merchantId" dc:"MerchantId" v:"MerchantId"`
+	PlanId                 uint64                      `json:"planId" dc:"PlanId" v:"required"`
+	UserId                 uint64                      `json:"userId" dc:"UserId" v:"required"`
+	DiscountCode           string                      `json:"discountCode"        dc:"DiscountCode"`
+	Discount               *bean.ExternalDiscountParam `json:"discount" dc:"Discount"`
+	Quantity               int64                       `json:"quantity" dc:"Quantity，Default 1" `
+	GatewayId              *uint64                     `json:"gatewayId" dc:"Id" `
+	AddonParams            []*bean.PlanAddonParam      `json:"addonParams" dc:"addonParams" `
+	ConfirmTotalAmount     int64                       `json:"confirmTotalAmount"  dc:"TotalAmount To Be Confirmed，Get From Preview"  v:"required"            `
+	ConfirmCurrency        string                      `json:"confirmCurrency"  dc:"Currency To Be Confirmed，Get From Preview" v:"required"  `
+	ReturnUrl              string                      `json:"returnUrl"  dc:"RedirectUrl"  `
+	CancelUrl              string                      `json:"cancelUrl" dc:"CancelUrl"`
+	VatCountryCode         string                      `json:"vatCountryCode" dc:"VatCountryCode, CountryName"`
+	VatNumber              string                      `json:"vatNumber" dc:"VatNumber" `
+	TaxPercentage          *int64                      `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%"`
+	PaymentMethodId        string                      `json:"paymentMethodId" dc:"PaymentMethodId" `
+	Metadata               map[string]interface{}      `json:"metadata" dc:"Metadata，Map"`
+	TrialEnd               int64                       `json:"trialEnd"                    description:"trial_end, utc time"` // trial_end, utc time
+	StartIncomplete        bool                        `json:"StartIncomplete"        dc:"StartIncomplete, use now pay later, subscription will generate invoice and start with incomplete status if set"`
+	ProductData            *bean.PlanProductParam      `json:"productData"  dc:"ProductData"  `
+	ApplyPromoCredit       bool                        `json:"applyPromoCredit" `
+	ApplyPromoCreditAmount *int64                      `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 type CreateInternalRes struct {
@@ -259,7 +261,7 @@ func SubscriptionCreatePreview(ctx context.Context, req *CreatePreviewInternalRe
 		{
 			//conflict, disable discount code
 			if promoCreditDiscountCodeExclusive && canApply && req.ApplyPromoCredit != nil && *req.ApplyPromoCredit {
-				_, promoCreditPayout, _ := payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, plan.Currency, plan.Amount)
+				_, promoCreditPayout, _ := payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, plan.Currency, plan.Amount, req.ApplyPromoCreditAmount)
 				if promoCreditPayout != nil && promoCreditPayout.CurrencyAmount > 0 {
 					discountMessage = "Promo Credit Conflict with Discount code"
 					req.DiscountCode = ""
@@ -308,7 +310,7 @@ func SubscriptionCreatePreview(ctx context.Context, req *CreatePreviewInternalRe
 		var promoCreditPayout *bean.CreditPayout
 		var creditPayoutErr error
 		if *req.ApplyPromoCredit {
-			promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, plan.Currency, totalAmountExcludingTax)
+			promoCreditAccount, promoCreditPayout, creditPayoutErr = payment.CheckCreditUserPayout(ctx, req.MerchantId, req.UserId, consts.CreditAccountTypePromo, plan.Currency, totalAmountExcludingTax, req.ApplyPromoCreditAmount)
 			if creditPayoutErr == nil && promoCreditAccount != nil && promoCreditPayout != nil {
 				promoCreditDiscountAmount = promoCreditPayout.CurrencyAmount
 				totalAmountExcludingTax = totalAmountExcludingTax - promoCreditDiscountAmount
@@ -402,24 +404,25 @@ func SubscriptionCreatePreview(ctx context.Context, req *CreatePreviewInternalRe
 	} else {
 		var currentTimeEnd = subscription2.GetPeriodEndFromStart(ctx, currentTimeStart.Timestamp(), currentTimeStart.Timestamp(), req.PlanId)
 		invoice := invoice_compute.ComputeSubscriptionBillingCycleInvoiceDetailSimplify(ctx, &invoice_compute.CalculateInvoiceReq{
-			UserId:             req.UserId,
-			InvoiceName:        "SubscriptionCreate",
-			DiscountCode:       req.DiscountCode,
-			TimeNow:            gtime.Now().Timestamp(),
-			Currency:           currency,
-			PlanId:             req.PlanId,
-			Quantity:           req.Quantity,
-			AddonJsonData:      utility.MarshalToJsonString(req.AddonParams),
-			CountryCode:        vatCountryCode,
-			VatNumber:          validVatNumber,
-			TaxPercentage:      subscriptionTaxPercentage,
-			PeriodStart:        currentTimeStart.Timestamp(),
-			PeriodEnd:          currentTimeEnd,
-			FinishTime:         currentTimeStart.Timestamp(),
-			ProductData:        req.ProductData,
-			BillingCycleAnchor: currentTimeStart.Timestamp(),
-			Metadata:           req.Metadata,
-			ApplyPromoCredit:   *req.ApplyPromoCredit,
+			UserId:                 req.UserId,
+			InvoiceName:            "SubscriptionCreate",
+			DiscountCode:           req.DiscountCode,
+			TimeNow:                gtime.Now().Timestamp(),
+			Currency:               currency,
+			PlanId:                 req.PlanId,
+			Quantity:               req.Quantity,
+			AddonJsonData:          utility.MarshalToJsonString(req.AddonParams),
+			CountryCode:            vatCountryCode,
+			VatNumber:              validVatNumber,
+			TaxPercentage:          subscriptionTaxPercentage,
+			PeriodStart:            currentTimeStart.Timestamp(),
+			PeriodEnd:              currentTimeEnd,
+			FinishTime:             currentTimeStart.Timestamp(),
+			ProductData:            req.ProductData,
+			BillingCycleAnchor:     currentTimeStart.Timestamp(),
+			Metadata:               req.Metadata,
+			ApplyPromoCredit:       *req.ApplyPromoCredit,
+			ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 		})
 
 		return &CreatePreviewInternalRes{
@@ -561,6 +564,12 @@ func SubscriptionCreate(ctx context.Context, req *CreateInternalReq) (*CreateInt
 	}
 	id, _ := result.LastInsertId()
 	one.Id = uint64(uint(id))
+
+	{
+		if vat_gateway.GetDefaultVatGateway(ctx, req.MerchantId) == nil {
+			sub_update.UpdateUserTaxPercentageOnly(ctx, prepare.UserId, one.TaxPercentage)
+		}
+	}
 
 	var createRes *gateway_bean.GatewayCreateSubscriptionResp
 	invoice, err := service3.CreateProcessingInvoiceForSub(ctx, req.PlanId, prepare.Invoice, one, one.GatewayId, prepare.GatewayPaymentMethodId, true, gtime.Now().Timestamp())

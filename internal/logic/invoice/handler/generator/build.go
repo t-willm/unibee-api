@@ -52,6 +52,11 @@ func (doc *Document) Build() (*fpdf.Fpdf, error) {
 	doc.appendTitle()
 	doc.appendInvoiceHeader()
 
+	y = doc.pdf.GetY()
+	if y < 44 {
+		y = 44
+	}
+
 	doc.pdf.SetXY(x, y)
 
 	y = doc.pdf.GetY() + BaseMargin

@@ -14,6 +14,8 @@ import (
 	metric2 "unibee/internal/logic/metric"
 	subscription2 "unibee/internal/logic/subscription"
 	"unibee/internal/logic/subscription/timeline"
+	"unibee/internal/logic/user/sub_update"
+	"unibee/internal/logic/vat_gateway"
 	entity "unibee/internal/model/entity/default"
 	"unibee/internal/query"
 	"unibee/utility"
@@ -106,6 +108,12 @@ func HandlePendingUpdatePaymentSuccess(ctx context.Context, sub *entity.Subscrip
 	}).Where(dao.Subscription.Columns().SubscriptionId, one.SubscriptionId).OmitNil().Update()
 	if err != nil {
 		return false, err
+	}
+
+	{
+		if vat_gateway.GetDefaultVatGateway(ctx, one.MerchantId) == nil {
+			sub_update.UpdateUserTaxPercentageOnly(ctx, one.UserId, one.TaxPercentage)
+		}
 	}
 
 	user := query.GetUserAccountById(ctx, sub.UserId)

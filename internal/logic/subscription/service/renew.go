@@ -32,16 +32,17 @@ type RenewInternalReq struct {
 	MerchantId     uint64 `json:"merchantId" dc:"MerchantId" v:"MerchantId"`
 	SubscriptionId string `json:"subscriptionId" dc:"SubscriptionId" v:"required"`
 	//UserId         uint64                      `json:"userId" dc:"UserId" v:"required"`
-	GatewayId        *uint64                     `json:"gatewayId" dc:"GatewayId, use subscription's gateway if not provide"`
-	TaxPercentage    *int64                      `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%"`
-	DiscountCode     string                      `json:"discountCode" dc:"DiscountCode, override subscription discount"`
-	Discount         *bean.ExternalDiscountParam `json:"discount" dc:"Discount, override subscription discount"`
-	ManualPayment    bool                        `json:"manualPayment" dc:"ManualPayment"`
-	ReturnUrl        string                      `json:"returnUrl"  dc:"ReturnUrl"  `
-	CancelUrl        string                      `json:"cancelUrl" dc:"CancelUrl"`
-	ProductData      *bean.PlanProductParam      `json:"productData"  dc:"ProductData"  `
-	Metadata         map[string]interface{}      `json:"metadata" dc:"Metadata，Map"`
-	ApplyPromoCredit *bool                       `json:"applyPromoCredit" `
+	GatewayId              *uint64                     `json:"gatewayId" dc:"GatewayId, use subscription's gateway if not provide"`
+	TaxPercentage          *int64                      `json:"taxPercentage" dc:"TaxPercentage，1000 = 10%"`
+	DiscountCode           string                      `json:"discountCode" dc:"DiscountCode, override subscription discount"`
+	Discount               *bean.ExternalDiscountParam `json:"discount" dc:"Discount, override subscription discount"`
+	ManualPayment          bool                        `json:"manualPayment" dc:"ManualPayment"`
+	ReturnUrl              string                      `json:"returnUrl"  dc:"ReturnUrl"  `
+	CancelUrl              string                      `json:"cancelUrl" dc:"CancelUrl"`
+	ProductData            *bean.PlanProductParam      `json:"productData"  dc:"ProductData"  `
+	Metadata               map[string]interface{}      `json:"metadata" dc:"Metadata，Map"`
+	ApplyPromoCredit       *bool                       `json:"applyPromoCredit" `
+	ApplyPromoCreditAmount *int64                      `json:"applyPromoCreditAmount"  dc:"apply promo credit amount, auto compute if not specified"`
 }
 
 func SubscriptionRenew(ctx context.Context, req *RenewInternalReq) (*CreateInternalRes, error) {
@@ -108,24 +109,25 @@ func SubscriptionRenew(ctx context.Context, req *RenewInternalReq) (*CreateInter
 	}
 
 	currentInvoice := invoice_compute.ComputeSubscriptionBillingCycleInvoiceDetailSimplify(ctx, &invoice_compute.CalculateInvoiceReq{
-		UserId:             sub.UserId,
-		InvoiceName:        "SubscriptionRenew",
-		Currency:           sub.Currency,
-		DiscountCode:       req.DiscountCode,
-		TimeNow:            timeNow,
-		PlanId:             sub.PlanId,
-		Quantity:           sub.Quantity,
-		AddonJsonData:      utility.MarshalToJsonString(addonParams),
-		CountryCode:        countryCode,
-		VatNumber:          vatNumber,
-		TaxPercentage:      subscriptionTaxPercentage,
-		PeriodStart:        timeNow,
-		PeriodEnd:          subscription2.GetPeriodEndFromStart(ctx, timeNow, timeNow, sub.PlanId),
-		FinishTime:         timeNow,
-		ProductData:        req.ProductData,
-		BillingCycleAnchor: timeNow,
-		Metadata:           req.Metadata,
-		ApplyPromoCredit:   *req.ApplyPromoCredit,
+		UserId:                 sub.UserId,
+		InvoiceName:            "SubscriptionRenew",
+		Currency:               sub.Currency,
+		DiscountCode:           req.DiscountCode,
+		TimeNow:                timeNow,
+		PlanId:                 sub.PlanId,
+		Quantity:               sub.Quantity,
+		AddonJsonData:          utility.MarshalToJsonString(addonParams),
+		CountryCode:            countryCode,
+		VatNumber:              vatNumber,
+		TaxPercentage:          subscriptionTaxPercentage,
+		PeriodStart:            timeNow,
+		PeriodEnd:              subscription2.GetPeriodEndFromStart(ctx, timeNow, timeNow, sub.PlanId),
+		FinishTime:             timeNow,
+		ProductData:            req.ProductData,
+		BillingCycleAnchor:     timeNow,
+		Metadata:               req.Metadata,
+		ApplyPromoCredit:       *req.ApplyPromoCredit,
+		ApplyPromoCreditAmount: req.ApplyPromoCreditAmount,
 	})
 
 	// createAndPayNewProrationInvoice
