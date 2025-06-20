@@ -1,0 +1,69 @@
+services:
+  unibee_api:
+    image: chdotworld/dotworld:golang-air-atlas-ubuntu
+    container_name: unibee_api
+    environment:
+      - container=docker
+    volumes:
+      - "./../../:/workspaces/unibee-api"
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - './bin/expose:/usr/local/bin/expose'
+    networks:
+      - infrastructure
+    depends_on:
+      unibee_mysql:
+        condition: service_started
+      unibee_redis:
+        condition: service_started
+    ports:
+      - '${AIR_PORT}:${AIR_PORT}'
+      - "2345:2345"  # Delve debug port
+      - "8081:8081"  # Log viewer
+    working_dir: /workspaces/unibee-api
+
+  unibee_redis:
+    image: 'redis:alpine'
+    container_name: unibee_redis
+    ports:
+      - '${FORWARD_REDIS_PORT:-6379}:6379'
+    volumes:
+      - 'unibee_redis_data:/data'
+    restart: unless-stopped
+    networks:
+      - infrastructure
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+
+  unibee_mysql:
+    image: mysql:8.0.37
+    container_name: unibee_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-unibee}
+      MYSQL_USER: ${DB_USER:-unibee}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-changeme}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-changeme}
+      MYSQL_PORT: ${DB_PORT:-3306}
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    volumes:
+      - unibee_mysql_data:/var/lib/mysql
+      - ./../../manifest/deploy/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./../../manifest/deploy/mysql:/opt/sql
+    ports:
+      - ${FORWARD_DB_PORT:-3306}:${DB_PORT:-3306}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - infrastructure
+
+networks:
+  infrastructure:
+    driver: bridge
+
+volumes:
+  unibee_redis_data:
+    driver: local
+  unibee_mysql_data:
+    driver: local
