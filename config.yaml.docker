@@ -1,0 +1,31 @@
+env: local
+
+server:
+  address:     ":8088"
+  domainPath: "http://127.0.0.1:8088"
+  tokenKey: "3^&secret-key-for-UniBee*1!8*"
+  openapiPath: "/api.json"
+  swaggerPath: "/swagger"
+
+auth:
+  login:
+    expire: 3600
+
+logger:
+  level : "all"
+  stdout: true
+
+database:
+  default:
+    link:    "mysql:unibee:changeme@tcp(unibee_mysql:3306)/unibee"
+    debug:   false
+    type:    mysql
+    charset:  "utf8mb4"
+
+# Redis Stage
+redis:
+  default:
+    address: unibee_redis:6379
+    maxIdle: 500
+    minIdle: 10
+    idleTimeout: 1d

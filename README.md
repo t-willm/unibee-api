@@ -4,6 +4,75 @@
 
 The UniBee API is an essential service for the UniBee Billing system, designed to empower our customers to effectively manage their subscription plans. It provides seamless access to multiple payment channels, subscription management, invoicing services, and more, simplifying and streamlining the billing process.
 
+# Local Environment
+
+## Prerequisites
+
+- Docker Desktop 
+- Make
+
+## Description
+
+The local environment is based on Docker Desktop and Make, which makes it easy to run and manage the UniBee API locally.
+
+It uses the following Docker images:
+- chdotworld/dotworld:golang-air-atlas-ubuntu
+- redis:alpine
+- mysql:8.0.37
+
+All necessary ports are exposed, including the Air port, Redis port, and MySQL port.
+
+Configured using `.env` in `.devcontainer/docker` directory and `config.yaml.docker`.
+
+**So you need to set up the config.yaml first.**
+
+```bash
+cp config.yaml.docker config.yaml
+```
+
+Then we can execute `make run` to start the container.
+
+## Usage As Local Environment (no codespace)
+
+### How To Run
+
+```bash
+make run
+```
+
+### How to enter the container
+```bash
+make bash
+or 
+make zsh
+```
+
+### Serve
+
+```bash
+make serve
+```
+
+### Share
+
+```bash
+make expose
+```
+
+## Usage As Codespace Environment
+
+### How To Serve
+
+```bash
+dotdev serve
+```
+
+### How to share 
+
+```bash
+dotdev share --port 8088
+```
+
 # Infra
 ### Gateway
 - Stripe
